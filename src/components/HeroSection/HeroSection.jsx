@@ -1,4 +1,6 @@
 import { Box, Typography, Button, Stack } from '@mui/material';
+import { Link } from 'react-router-dom';
+
 const HeroSection = () => {
   return (
     <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
@@ -11,8 +13,12 @@ const HeroSection = () => {
         tools to enhance your skills and connect with others in the sport.
       </Typography>
       <Stack direction="row" justifyContent="center" spacing={2} sx={{ mb: 4 }}>
+      <Link to="/register">
         <Button variant="contained" color="inherit">Register Now</Button>
+      </Link>
+      <Link to="/register">
         <Button variant="contained" color="warning">Start Free Trial →</Button>
+      </Link>
       </Stack>
       <Box
         component="labxsibce4ajm5jc.jpg"
