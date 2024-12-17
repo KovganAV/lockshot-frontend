@@ -11,7 +11,7 @@ const features = [
     icon: <FireIcon fontSize="large" />,
     title: 'Mark Achievements',
     description:
-      'Track every shot on your journey to perfection. Lockshot lets you log and review your hits, helping you analyze your performance and see your progress over time.',
+      'Track every stroke on your way to perfection. Lockshot allows you to log and view your kicks, analyze your results and see your progress.',
   },
   {
     icon: <GroupIcon fontSize="large" />,

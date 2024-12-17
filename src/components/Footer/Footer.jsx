@@ -13,7 +13,6 @@ const Footer = () => {
     >
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          {/* Колонка 1: О нас */}
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               About Us
@@ -24,7 +23,6 @@ const Footer = () => {
             </Typography>
           </Grid>
 
-          {/* Колонка 2: Быстрые ссылки */}
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Quick Links
@@ -43,7 +41,6 @@ const Footer = () => {
             </Link>
           </Grid>
 
-          {/* Колонка 3: Социальные сети */}
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Follow Us

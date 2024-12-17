@@ -1,5 +1,7 @@
 import { Box, Container, TextField, Button, Typography } from "@mui/material";
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header/Header';
+
 const LoginPage = () => {
   return (
     <Box
@@ -43,9 +45,11 @@ const LoginPage = () => {
               Login
             </Button>
           </form>
+          <Link to="/register">
           <Typography variant="body2">
-            Dont have an account? <a href="/register">Sign up</a>
+            Dont have an account? Sign up
           </Typography>
+          </Link>
         </Box>
       </Container>
     </Box>
