@@ -83,11 +83,7 @@ const Footer = () => {
             </Link>
           </Grid>
         </Grid>
-
-        {/* Разделительная линия */}
         <Divider sx={{ my: 4 }} />
-
-        {/* Нижняя строка с копирайтом */}
         <Box textAlign="center">
           <Typography variant="body2" color="text.secondary">
             © {new Date().getFullYear()} Lockshot. All rights reserved.

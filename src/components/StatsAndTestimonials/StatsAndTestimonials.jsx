@@ -4,7 +4,6 @@ import { Box, Typography, Grid, Paper } from "@mui/material";
 const StatsAndTestimonials = () => {
   return (
     <Box sx={{ py: 6, textAlign: "center" }}>
-      {/* Заголовок и описание */}
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Striking Stats and Achievements
       </Typography>
@@ -13,8 +12,6 @@ const StatsAndTestimonials = () => {
         skills, numerous community interactions, and countless hours of tutorial
         videos watched, showcasing our impact in the shooting sports community.
       </Typography>
-
-      {/* Блок статистики */}
       <Grid container spacing={2} justifyContent="center" mb={6}>
         {[
           { value: "5,000%", label: "Happy Users" },
@@ -34,8 +31,6 @@ const StatsAndTestimonials = () => {
           </Grid>
         ))}
       </Grid>
-
-      {/* Заголовок и описание для отзывов */}
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Voices from Our Community
       </Typography>
@@ -44,8 +39,6 @@ const StatsAndTestimonials = () => {
         the transformative impact of our platform on their training and
         engagement in the shooting sports community.
       </Typography>
-
-      {/* Блок отзывов */}
       <Grid container spacing={4} justifyContent="center">
         {[
           {

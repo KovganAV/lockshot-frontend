@@ -4,20 +4,18 @@ import Header from '../../components/Header/Header';
 
 const RegisterPage = () => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        textAlign: "center",
-        backgroundColor: "#f8f9fa",
-      }}
-    >
-      <Container maxWidth="md">
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          textAlign: "center",
+          backgroundColor: "#f8f9fa",
+        }}
+      >
         <Header />
-        <Box sx={{ width: "100%", maxWidth: "400px", marginTop: "20px" }}>
+        <Container maxWidth="md">
+          <Box sx={{ width: "100%", maxWidth: "400px", marginTop: "20px", justifyContent: "center", alignItems: "center"}}>
           <Typography variant="h4" component="h1" gutterBottom>
             Register
           </Typography>

@@ -8,16 +8,14 @@ const LoginPage = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
         minHeight: "100vh",
         textAlign: "center",
         backgroundColor: "#f8f9fa",
       }}
     >
+      <Header />
       <Container maxWidth="md">
-        <Header />
-        <Box sx={{ width: "100%", maxWidth: "400px", marginTop: "20px" }}>
+        <Box sx={{ width: "100%", maxWidth: "400px", marginTop: "20px", justifyContent: "center", alignItems: "center"}}>
           <Typography variant="h4" component="h1" gutterBottom>
             Login
           </Typography>
