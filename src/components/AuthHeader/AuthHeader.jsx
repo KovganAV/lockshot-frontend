@@ -1,4 +1,5 @@
-import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+/*import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+
 import { Link } from "react-router-dom";
 
 const AuthHeader = () => {
@@ -37,3 +38,34 @@ const AuthHeader = () => {
 };
 
 export default AuthHeader;
+*/
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+import { Link } from "react-router-dom";
+
+const HeaderAuthorized = () => {
+  return (
+    <AppBar position="static" color="default" elevation={1}>
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Typography variant="h6" fontWeight="bold">
+          Lockshot
+        </Typography>
+        <Box>
+          <Button color="inherit" component={Link} to="/events">
+            Events
+          </Button>
+          <Button color="inherit" component={Link} to="/content">
+            Content
+          </Button>
+          <Button color="inherit" component={Link} to="/statistics">
+            Statistics
+          </Button>
+          <Button color="inherit" component={Link} to="/profile">
+            Profile
+          </Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default HeaderAuthorized;
