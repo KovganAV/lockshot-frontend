@@ -13,6 +13,7 @@ const StatisticsPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChart, setSelectedChart] = useState(null);
   const [newShot, setNewShot] = useState({ date: "", value: "" });
+  const [advice, setAdvice] = useState("");
 
   useEffect(() => {
     setAccuracyData([
@@ -73,6 +74,7 @@ const StatisticsPage = () => {
     ]);
   }, []);
 
+  
   const handleAddShot = () => {
     if (newShot.date && newShot.value) {
       const updatedData = [
@@ -111,25 +113,127 @@ const StatisticsPage = () => {
     <>
       <AuthHeader />
       <Container maxWidth="lg" sx={{ marginTop: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={4}>
-          <TextField
-            label="Дата"
-            type="date"
-            value={newShot.date}
-            onChange={(e) => setNewShot({ ...newShot, date: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-            sx={{ marginRight: 2 }}
-          />
-          <TextField
-            label="Точность"
-            type="number"
-            value={newShot.value}
-            onChange={(e) => setNewShot({ ...newShot, value: e.target.value })}
-            sx={{ marginRight: 2 }}
-          />
-          <Button variant="contained" onClick={handleAddShot}>
-            Добавить выстрел
-          </Button>
+          <Box
+          sx={{
+            padding: 4,
+            borderRadius: 3,
+            boxShadow: 4,
+            backgroundColor: "f9f9f9",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            alignItems: "center",
+            textAlign: "center",
+            marginBottom: 4,
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: "bold"}}>
+            Управление выстрелами и сериями
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#757575", maxWidth: 600 }}>
+            Добавьте одиночные выстрелы или запишите прогресс серий по 5 или 10 выстрелов. Это поможет отслеживать вашу точность и достижения.
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Дата"
+              type="date"
+              value={newShot.date}
+              onChange={(e) => setNewShot({ ...newShot, date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                minWidth: "200px",
+                boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
+                borderRadius: 2,
+              }}
+            />
+            <TextField
+              label="Точность (%)"
+              type="number"
+              placeholder="Например, 85"
+              value={newShot.value}
+              onChange={(e) => setNewShot({ ...newShot, value: e.target.value })}
+              sx={{
+                minWidth: "200px",
+                boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
+                borderRadius: 2,
+              }}
+            />
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleAddShot}
+              sx={{
+                backgroundColor: "#050505",
+                color: "#fff",
+                fontWeight: "bold",
+                padding: "10px 20px",
+                "&:hover": { backgroundColor: "#3b3b3b" },
+                boxShadow: "2px 4px 6px rgba(63, 81, 181, 0.4)",
+                textTransform: "none",
+              }}
+            >
+              Добавить выстрел
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 4,
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginTop: 3,
+            }}
+          >
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => alert("Серия из 5 добавлена!")}
+              sx={{
+                minWidth: "180px",
+                borderColor: "#4caf50",
+                color: "#4caf50",
+                fontWeight: "bold",
+                padding: "10px 20px",
+                "&:hover": {
+                  backgroundColor: "#e8f5e9",
+                  borderColor: "#4caf50",
+                },
+                textTransform: "none",
+              }}
+            >
+              <span style={{ fontSize: "1.2em", marginRight: "8px" }}>🏅</span>
+              Серия из 5
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => alert("Серия из 10 добавлена!")}
+              sx={{
+                minWidth: "180px",
+                borderColor: "#ff9800",
+                color: "#ff9800",
+                fontWeight: "bold",
+                padding: "10px 20px",
+                "&:hover": {
+                  backgroundColor: "#fff3e0",
+                  borderColor: "#ff9800",
+                },
+                textTransform: "none",
+              }}
+            >
+              <span style={{ fontSize: "1.2em", marginRight: "8px" }}>🎯</span>
+              Серия из 10
+            </Button>
+          </Box>
         </Box>
         <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
           {[{ title: "Точность", data: accuracyData },
@@ -149,14 +253,7 @@ const StatisticsPage = () => {
             </Paper>
           ))}
         </Box>
-        <Box marginTop={4}>
-          <Typography variant="h6" fontWeight="bold">Лучшая серия</Typography>
-          <Typography>
-            Серия из 5: <b>{bestSeries.series5 || "N/A"}</b> | Серия из 10: <b>{bestSeries.series10 || "N/A"}</b>
-          </Typography>
-        </Box>
       </Container>
-
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
