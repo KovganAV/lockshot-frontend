@@ -11,6 +11,9 @@ const HeaderAuthorized = () => {
           </Typography>
         </Link>
         <Box>
+          <Button color="inherit" component={Link} to="/users">
+            Users
+          </Button>
           <Button color="inherit" component={Link} to="/events">
             Events
           </Button>

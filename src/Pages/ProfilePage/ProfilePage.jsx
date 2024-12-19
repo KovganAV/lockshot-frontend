@@ -81,9 +81,8 @@ const ProfilePage = () => {
   const weaponType = "rifle"; 
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#f9f9f9"}}>
-      <AuthHeader>
-      </AuthHeader>
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
+      <AuthHeader />
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -93,6 +92,7 @@ const ProfilePage = () => {
           "& .MuiPaper-root": { width: "200px", top: "56px !important", right: "24px" },
         }}
       >
+        <MenuItem onClick={handleMenuClose}>Тема</MenuItem>
         <MenuItem onClick={handleMenuClose}>Настройки</MenuItem>
         <MenuItem onClick={handleMenuClose}>Выход</MenuItem>
       </Menu>

@@ -7,6 +7,7 @@ import ProfilePage from './Pages/ProfilePage/ProfilePage';
 import StatisticsPage from './Pages/StatisticsPage/StatisticsPage';
 import EventsPage from './Pages/EventsPage/EventsPage';
 import ContentPage from './Pages/ContentPage/ContentPage';
+import UsersPage from './Pages/UsersPage/UsersPage'
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
           <Route path="/statistics" element ={<StatisticsPage/>} />
           <Route path="/events" element ={<EventsPage/>} />
           <Route path="/content" element ={<ContentPage/>} />
+          <Route path="/users" element ={<UsersPage/>} />
         </Routes>
       </Container>
     </Router>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Container, Typography, Paper } from "@mui/material";
+import { Box, Container, Typography, Paper, Button, TextField, Modal } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import "chart.js/auto";
@@ -9,6 +9,10 @@ const StatisticsPage = () => {
   const [shotsData, setShotsData] = useState([]);
   const [series5Data, setSeries5Data] = useState([]);
   const [series10Data, setSeries10Data] = useState([]);
+  const [bestSeries, setBestSeries] = useState({ series5: 0, series10: 0 });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedChart, setSelectedChart] = useState(null);
+  const [newShot, setNewShot] = useState({ date: "", value: "" });
 
   useEffect(() => {
     setAccuracyData([
@@ -68,7 +72,17 @@ const StatisticsPage = () => {
       { date: "2024-12-12", value: 80 },
     ]);
   }, []);
-  
+
+  const handleAddShot = () => {
+    if (newShot.date && newShot.value) {
+      const updatedData = [
+        ...accuracyData,
+        { date: newShot.date, value: parseInt(newShot.value, 10) },
+      ];
+      setAccuracyData(updatedData);
+      setNewShot({ date: "", value: "" });
+    }
+  };
 
   const chartOptions = {
     responsive: true,
@@ -88,41 +102,82 @@ const StatisticsPage = () => {
     ],
   });
 
+  const handleChartClick = (chartData) => {
+    setSelectedChart(chartData);
+    setModalOpen(true);
+  };
+
   return (
     <>
       <AuthHeader />
       <Container maxWidth="lg" sx={{ marginTop: 4 }}>
-        <Box display="grid" gridTemplateColumns="1fr" gap={3}>
-          <Paper elevation={3} sx={{ padding: 3 }}>
-            <Typography variant="h6" gutterBottom>Точность</Typography>
-            <Line data={generateChartData(accuracyData, "Точность")} options={chartOptions} />
-          </Paper>
-          <Paper elevation={3} sx={{ padding: 3 }}>
-            <Typography variant="h6" gutterBottom>Количество выстрелов</Typography>
-            <Line data={generateChartData(shotsData, "Количество выстрелов")} options={chartOptions} />
-          </Paper>
-          <Paper elevation={3} sx={{ padding: 3 }}>
-            <Typography variant="h6" gutterBottom>Серии по 5 выстрелов</Typography>
-            <Line data={generateChartData(series5Data, "Серии по 5")} options={chartOptions} />
-          </Paper>
-          <Paper elevation={3} sx={{ padding: 3 }}>
-            <Typography variant="h6" gutterBottom>Серии по 10 выстрелов</Typography>
-            <Line data={generateChartData(series10Data, "Серии по 10")} options={chartOptions} />
-          </Paper>
+        <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={4}>
+          <TextField
+            label="Дата"
+            type="date"
+            value={newShot.date}
+            onChange={(e) => setNewShot({ ...newShot, date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            sx={{ marginRight: 2 }}
+          />
+          <TextField
+            label="Точность"
+            type="number"
+            value={newShot.value}
+            onChange={(e) => setNewShot({ ...newShot, value: e.target.value })}
+            sx={{ marginRight: 2 }}
+          />
+          <Button variant="contained" onClick={handleAddShot}>
+            Добавить выстрел
+          </Button>
+        </Box>
+        <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
+          {[{ title: "Точность", data: accuracyData },
+            { title: "Количество выстрелов", data: shotsData },
+            { title: "Серии по 5 выстрелов", data: series5Data },
+            { title: "Серии по 10 выстрелов", data: series10Data }].map((chart, index) => (
+            <Paper
+              key={index}
+              elevation={3}
+              sx={{ padding: 3, cursor: "pointer" }}
+              onClick={() => handleChartClick(generateChartData(chart.data, chart.title))}
+            >
+              <Typography variant="h6" gutterBottom>
+                {chart.title}
+              </Typography>
+              <Line data={generateChartData(chart.data, chart.title)} options={chartOptions} />
+            </Paper>
+          ))}
         </Box>
         <Box marginTop={4}>
           <Typography variant="h6" fontWeight="bold">Лучшая серия</Typography>
           <Typography>
-            Серия из 5: <b>41</b> | Серия из 10: <b>76</b>
+            Серия из 5: <b>{bestSeries.series5 || "N/A"}</b> | Серия из 10: <b>{bestSeries.series10 || "N/A"}</b>
           </Typography>
         </Box>
       </Container>
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          {selectedChart && <Line data={selectedChart} options={chartOptions} />}
+        </Box>
+      </Modal>
     </>
   );
 };
 
 export default StatisticsPage;
-
 
 /*
 import { useState, useEffect } from "react";
