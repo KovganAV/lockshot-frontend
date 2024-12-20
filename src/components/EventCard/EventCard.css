@@ -1,0 +1,13 @@
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .event-list__empty {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+  }
+  
