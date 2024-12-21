@@ -14,8 +14,8 @@ const LoginPage = () => {
       }}
     >
       <Header />
-      <Container maxWidth="md">
-        <Box sx={{ width: "100%", maxWidth: "400px", marginTop: "20px", justifyContent: "center", alignItems: "center"}}>
+      <Container maxWidth="md" container direction="column" alignItems="center" spacing={2}>
+        <Box sx={{width: "400px", marginTop: "200px", marginLeft: "200px", justifyContent: "center", alignItems: "center"}}>
           <Typography variant="h4" component="h1" gutterBottom>
             Login
           </Typography>
