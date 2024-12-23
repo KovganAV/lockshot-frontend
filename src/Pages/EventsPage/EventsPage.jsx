@@ -35,7 +35,7 @@ const EventsPage = () => {
         ];
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setEvents(mockData); 
-      } catch (err) {
+      } catch (error) {
         setError("Ошибка при загрузке событий.");
       } finally {
         setIsLoading(false);

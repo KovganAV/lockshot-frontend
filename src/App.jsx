@@ -7,7 +7,9 @@ import ProfilePage from './Pages/ProfilePage/ProfilePage';
 import StatisticsPage from './Pages/StatisticsPage/StatisticsPage';
 import EventsPage from './Pages/EventsPage/EventsPage';
 import ContentPage from './Pages/ContentPage/ContentPage';
-import UsersPage from './Pages/UsersPage/UsersPage'
+import UsersPage from './Pages/UsersPage/UsersPage';
+import VideoPage from './Pages/VideoPage/VideoPage';
+import ArticlePage from './Pages/ArticlePage/ArticlePage';
 
 const App = () => {
   return (
@@ -23,6 +25,8 @@ const App = () => {
           <Route path="/events" element ={<EventsPage/>} />
           <Route path="/content" element ={<ContentPage/>} />
           <Route path="/users" element ={<UsersPage/>} />
+          <Route path="/article/:id" element={<ArticlePage />} />
+          <Route path="/video/:id" element={<VideoPage />} />
         </Routes>
       </Container>
     </Router>

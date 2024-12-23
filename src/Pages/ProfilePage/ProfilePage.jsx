@@ -1,65 +1,3 @@
-/*import { useEffect, useState } from "react";
-import { Box, Container, Typography, Avatar, Paper } from "@mui/material";
-import ProfileStatistics from "../../components/ProfileStatistics/ProfileStatistics";
-import AuthHeader from "../../components/AuthHeader/AuthHeader";
-import axios from "axios";
-
-const ProfilePage = () => {
-  const [userData, setUserData] = useState(null);
-  const [statistics, setStatistics] = useState([]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get("/api/user/profile");
-        setUserData(response.data.user);
-        setStatistics(response.data.statistics);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    fetchUserData();
-  }, []);
-
-  if (!userData) return <Typography>Loading...</Typography>;
-
-  return (
-    <>
-      <AuthHeader />
-      <Container maxWidth="lg" sx={{ marginTop: 4 }}>
-        <Paper elevation={3} sx={{ padding: 4, borderRadius: "8px" }}>
-          <Box display="flex" alignItems="center" gap={4}>
-            <Avatar
-              src={userData.avatarUrl || "/default-avatar.png"}
-              sx={{ width: 120, height: 120 }}
-            />
-            <Box>
-              <Typography variant="h5" fontWeight="bold">
-                {userData.name}
-              </Typography>
-              <Typography color="textSecondary">ID: {userData.id}</Typography>
-              <Typography color="textSecondary">
-                Статус: {userData.status || "Активный"}
-              </Typography>
-            </Box>
-          </Box>
-          <ProfileStatistics statistics={statistics} />
-          <Box marginTop={4}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Персональные советы от AI
-            </Typography>
-            <Typography>
-              {userData.aiAdvice || "Тренируйтесь чаще для улучшения точности."}
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
-    </>
-  );
-};
-
-export default ProfilePage;
-*/
 import { useState } from "react";
 import { Box, Grid, Paper, Typography, Avatar, Menu, MenuItem, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -81,8 +19,9 @@ const ProfilePage = () => {
   const weaponType = "rifle"; 
 
   return (
+    <>
+    <AuthHeader />
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
-      <AuthHeader />
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -150,6 +89,7 @@ const ProfilePage = () => {
         </Paper>
       </Grid>
     </Box>
+    </>
   );
 };
 

@@ -9,11 +9,9 @@ const StatisticsPage = () => {
   const [shotsData, setShotsData] = useState([]);
   const [series5Data, setSeries5Data] = useState([]);
   const [series10Data, setSeries10Data] = useState([]);
-  const [bestSeries, setBestSeries] = useState({ series5: 0, series10: 0 });
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChart, setSelectedChart] = useState(null);
-  const [newShot, setNewShot] = useState({ date: "", value: "" });
-  const [advice, setAdvice] = useState("");
+  const [newShot, setNewShot] = useState({ date: "", value: "" })
 
   useEffect(() => {
     setAccuracyData([
@@ -276,114 +274,3 @@ const StatisticsPage = () => {
 
 export default StatisticsPage;
 
-/*
-import { useState, useEffect } from "react";
-import { Box, Container, Typography, Paper, CircularProgress } from "@mui/material";
-import { Line } from "react-chartjs-2";
-import AuthHeader from "../../components/AuthHeader/AuthHeader";
-import axios from "axios";
-import "chart.js/auto";
-
-const StatisticsPage = () => {
-  const [accuracyData, setAccuracyData] = useState([]);
-  const [shotsData, setShotsData] = useState([]);
-  const [series5Data, setSeries5Data] = useState([]);
-  const [series10Data, setSeries10Data] = useState([]);
-  const [bestSeries, setBestSeries] = useState({ series5: 0, series10: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Функция для загрузки данных с бэкенда
-  const fetchStatistics = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get("/api/user/statistics"); // Заменить на актуальный URL
-      const { accuracy, shots, series5, series10, bestSeries } = response.data;
-
-      // Устанавливаем данные в состояние
-      setAccuracyData(accuracy);
-      setShotsData(shots);
-      setSeries5Data(series5);
-      setSeries10Data(series10);
-      setBestSeries(bestSeries);
-    } catch (err) {
-      console.error("Ошибка при загрузке данных статистики:", err);
-      setError("Не удалось загрузить статистику. Попробуйте позже.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStatistics();
-  }, []);
-
-  // Опции для графиков
-  const chartOptions = {
-    responsive: true,
-    plugins: { legend: { display: false } },
-  };
-
-  // Генерация данных для графиков
-  const generateChartData = (data, label) => ({
-    labels: data.map((item) => item.date),
-    datasets: [
-      {
-        label,
-        data: data.map((item) => item.value),
-        borderColor: "#3f51b5",
-        backgroundColor: "rgba(63, 81, 181, 0.3)",
-        tension: 0.3,
-      },
-    ],
-  });
-
-  return (
-    <>
-      <AuthHeader />
-      <Container maxWidth="lg" sx={{ marginTop: 4 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Статистика пользователя
-        </Typography>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Typography color="error">{error}</Typography>
-        ) : (
-          <>
-            <Box display="grid" gridTemplateColumns="1fr" gap={3}>
-              <Paper elevation={3} sx={{ padding: 3 }}>
-                <Typography variant="h6" gutterBottom>Точность</Typography>
-                <Line data={generateChartData(accuracyData, "Точность")} options={chartOptions} />
-              </Paper>
-              <Paper elevation={3} sx={{ padding: 3 }}>
-                <Typography variant="h6" gutterBottom>Количество выстрелов</Typography>
-                <Line data={generateChartData(shotsData, "Количество выстрелов")} options={chartOptions} />
-              </Paper>
-              <Paper elevation={3} sx={{ padding: 3 }}>
-                <Typography variant="h6" gutterBottom>Серии по 5 выстрелов</Typography>
-                <Line data={generateChartData(series5Data, "Серии по 5")} options={chartOptions} />
-              </Paper>
-              <Paper elevation={3} sx={{ padding: 3 }}>
-                <Typography variant="h6" gutterBottom>Серии по 10 выстрелов</Typography>
-                <Line data={generateChartData(series10Data, "Серии по 10")} options={chartOptions} />
-              </Paper>
-            </Box>
-            <Box marginTop={4}>
-              <Typography variant="h6" fontWeight="bold">Лучшая серия</Typography>
-              <Typography>
-                Серия из 5: <b>{bestSeries.series5 || "N/A"}</b> | Серия из 10: <b>{bestSeries.series10 || "N/A"}</b>
-              </Typography>
-            </Box>
-          </>
-        )}
-      </Container>
-    </>
-  );
-};
-
-export default StatisticsPage;
-
-*/
