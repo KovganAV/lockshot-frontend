@@ -35,7 +35,6 @@ const ContentPage = () => {
     <>
       <AuthHeader />
       <main style={{ padding: "20px" }}>
-        {/* Поисковая строка */}
         <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
@@ -52,7 +51,6 @@ const ContentPage = () => {
           />
         </div>
 
-        {/* Секция статей */}
         <section style={{ marginBottom: "40px" }}>
           <div style={{ display: "grid", gap: "20px", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
             {filteredArticles.length > 0 ? (
@@ -80,7 +78,6 @@ const ContentPage = () => {
           </div>
         </section>
 
-        {/* Секция видео */}
         <section>
           <div style={{ display: "grid", gap: "20px", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
             {videos.map((video) => (
