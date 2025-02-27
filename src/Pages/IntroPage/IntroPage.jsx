@@ -1,7 +1,7 @@
 import { Box, Container } from "@mui/material";
-import Header from '../../components/Header/Header';
-import HeroSection from '../../components/HeroSection/HeroSection';
-import FeaturesSection from '../../components/FeaturesSection/FeaturesSection';
+import Header from "../../components/Header/Header";
+import HeroSection from "../../components/HeroSection/HeroSection";
+import FeaturesSection from "../../components/FeaturesSection/FeaturesSection";
 import StatsAndTestimonials from "../../components/StatsAndTestimonials/StatsAndTestimonials";
 import AmazingFeature from "../../components/AmazingFeature/AmazingFeature";
 import ExploreFeatures from "../../components/ExploreFeatures/ExploreFeatures";
@@ -13,33 +13,19 @@ const IntroPage = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh", 
-        textAlign: "center",
         backgroundColor: "#f8f9fa",
+        textAlign: "center",
       }}
     >
-      <Container maxWidth="md">
-
-        <Box
-          component="img"
-          src="your-image.png"
-          alt="Target Image"
-          sx={{
-            width: "100%",
-            maxWidth: "500px",
-            margin: "auto",
-            display: "block",
-          }}
-        />
-      </Container>
-      <Header/>
+      <Header />
       <HeroSection />
-      <FeaturesSection />
-      <StatsAndTestimonials/>
-      <AmazingFeature/>
-      <ExploreFeatures/>
+      <Container maxWidth="lg" sx={{ marginTop: 4 }}>
+        <FeaturesSection />
+        <StatsAndTestimonials />
+        <AmazingFeature />
+        <ExploreFeatures />
+      </Container>
       <Footer />
     </Box>
   );

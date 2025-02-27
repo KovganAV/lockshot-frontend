@@ -16,7 +16,7 @@ const App = () => {
     <Router> 
       <CssBaseline />
       <Container>
-        <Routes>
+        <Routes >
           <Route path="/" element={<IntroPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

@@ -1,8 +1,38 @@
-import { Box, Container, TextField, Button, Typography } from "@mui/material";
-import { Link } from 'react-router-dom';
+import { Box, Container, TextField, Button, Typography, Alert } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react"; 
+import axios from "axios";
 import Header from '../../components/Header/Header';
 
 const LoginPage = () => {
+  const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.removeItem("authToken"); 
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("https://localhost:7044/api/Users/login", {
+        email,
+        password,
+      });
+
+      if (response.status === 200) {
+        const { token } = response.data; 
+        localStorage.setItem("authToken", token);
+        navigate("/profile"); 
+      }
+    } catch (err) {
+      setError(err.response?.data?.title || "Login failed."); 
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -14,16 +44,19 @@ const LoginPage = () => {
       }}
     >
       <Header />
-      <Container maxWidth="md" container direction="column" alignItems="center" spacing={2}>
-        <Box sx={{width: "400px", marginTop: "200px", marginLeft: "200px", justifyContent: "center", alignItems: "center"}}>
+      <Container maxWidth="md">
+        <Box sx={{ width: "400px", margin: "200px auto 0 auto", textAlign: "center" }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Login
           </Typography>
-          <form>
+          {error && <Alert severity="error">{error}</Alert>}
+          <form onSubmit={handleLogin}>
             <TextField
-              label="Username"
+              label="Email"
               variant="outlined"
               fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               sx={{ marginBottom: "16px" }}
             />
             <TextField
@@ -31,6 +64,8 @@ const LoginPage = () => {
               type="password"
               variant="outlined"
               fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               sx={{ marginBottom: "16px" }}
             />
             <Button
@@ -44,9 +79,9 @@ const LoginPage = () => {
             </Button>
           </form>
           <Link to="/register">
-          <Typography variant="body2">
-            Dont have an account? Sign up
-          </Typography>
+            <Typography variant="body2">
+              Don’t have an account? Sign up
+            </Typography>
           </Link>
         </Box>
       </Container>

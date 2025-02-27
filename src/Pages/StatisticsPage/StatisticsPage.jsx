@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Container, Typography, Paper, Button, TextField, Modal } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
+import axios from "axios";
 import "chart.js/auto";
 
 const StatisticsPage = () => {
@@ -11,76 +12,73 @@ const StatisticsPage = () => {
   const [series10Data, setSeries10Data] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChart, setSelectedChart] = useState(null);
-  const [newShot, setNewShot] = useState({ date: "", value: "" })
+  const [newShot, setNewShot] = useState({ date: "", value: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setAccuracyData([
-      { date: "2024-12-01", value: 75 },
-      { date: "2024-12-02", value: 78 },
-      { date: "2024-12-03", value: 80 },
-      { date: "2024-12-04", value: 82 },
-      { date: "2024-12-05", value: 84 },
-      { date: "2024-12-06", value: 85 },
-      { date: "2024-12-07", value: 87 },
-      { date: "2024-12-08", value: 88 },
-      { date: "2024-12-09", value: 89 },
-      { date: "2024-12-10", value: 90 },
-      { date: "2024-12-11", value: 91 },
-      { date: "2024-12-12", value: 93 },
-    ]);
-    setShotsData([
-      { date: "2024-12-01", value: 120 },
-      { date: "2024-12-02", value: 130 },
-      { date: "2024-12-03", value: 140 },
-      { date: "2024-12-04", value: 145 },
-      { date: "2024-12-05", value: 150 },
-      { date: "2024-12-06", value: 155 },
-      { date: "2024-12-07", value: 160 },
-      { date: "2024-12-08", value: 170 },
-      { date: "2024-12-09", value: 180 },
-      { date: "2024-12-10", value: 190 },
-      { date: "2024-12-11", value: 200 },
-      { date: "2024-12-12", value: 210 },
-    ]);
-    setSeries5Data([
-      { date: "2024-12-01", value: 20 },
-      { date: "2024-12-02", value: 25 },
-      { date: "2024-12-03", value: 28 },
-      { date: "2024-12-04", value: 30 },
-      { date: "2024-12-05", value: 32 },
-      { date: "2024-12-06", value: 34 },
-      { date: "2024-12-07", value: 36 },
-      { date: "2024-12-08", value: 38 },
-      { date: "2024-12-09", value: 39 },
-      { date: "2024-12-10", value: 40 },
-      { date: "2024-12-11", value: 42 },
-      { date: "2024-12-12", value: 45 },
-    ]);
-    setSeries10Data([
-      { date: "2024-12-01", value: 50 },
-      { date: "2024-12-02", value: 55 },
-      { date: "2024-12-03", value: 58 },
-      { date: "2024-12-04", value: 60 },
-      { date: "2024-12-05", value: 62 },
-      { date: "2024-12-06", value: 65 },
-      { date: "2024-12-07", value: 67 },
-      { date: "2024-12-08", value: 70 },
-      { date: "2024-12-09", value: 72 },
-      { date: "2024-12-10", value: 75 },
-      { date: "2024-12-11", value: 78 },
-      { date: "2024-12-12", value: 80 },
-    ]);
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            console.log("Токен в localStorage:", localStorage.getItem("authToken"));
+            const token = localStorage.getItem("authToken");
+            if (!token) {
+                throw new Error("Отсутствует токен авторизации");
+            }
+
+            const response = await axios.get("/api/allHits", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("Данные с сервера:", response.data);
+            const data = Array.isArray(response.data) ? response.data : Object.values(response.data);
+            const shots = data
+                .filter(item => item && item.timestamp && item.score !== undefined)
+                .map(item => ({
+                    date: new Date(item.timestamp).toLocaleDateString(),
+                    value: item.score,
+                }));
+
+            setShotsData(shots);
+        } catch (err) {
+            console.error("Ошибка при загрузке данных выстрелов:", err);
+            setError("Не удалось загрузить данные выстрелов. Попробуйте позже.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchData();
   }, []);
 
-  
-  const handleAddShot = () => {
+
+  const handleAddShot = async () => {
     if (newShot.date && newShot.value) {
-      const updatedData = [
-        ...accuracyData,
-        { date: newShot.date, value: parseInt(newShot.value, 10) },
-      ];
-      setAccuracyData(updatedData);
-      setNewShot({ date: "", value: "" });
+      try {
+        const response = await axios.post("/api/Hits", {
+          date: newShot.date,
+          value: parseInt(newShot.value, 10),
+        });
+        setAccuracyData((prev) => [...prev, response.data]); 
+        setNewShot({ date: "", value: "" });
+      } catch (err) {
+        console.error("Ошибка при добавлении выстрела:", err);
+        alert("Не удалось добавить выстрел. Попробуйте позже.");
+      }
+    }
+  };
+
+  const handleAddSeries = async (seriesType) => {
+    try {
+      const response = await axios.post(`/api/statistics/${seriesType}`);
+      if (seriesType === "series5") {
+        setSeries5Data((prev) => [...prev, ...response.data]);
+      } else if (seriesType === "series10") {
+        setSeries10Data((prev) => [...prev, ...response.data]);
+      }
+      alert(`Серия ${seriesType === "series5" ? "из 5" : "из 10"} добавлена!`);
+    } catch (err) {
+      console.error(`Ошибка при добавлении ${seriesType}:`, err);
+      alert("Не удалось добавить серию. Попробуйте позже.");
     }
   };
 
@@ -107,16 +105,31 @@ const StatisticsPage = () => {
     setModalOpen(true);
   };
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography>Загрузка данных...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
   return (
     <>
       <AuthHeader />
       <Container maxWidth="lg" sx={{ marginTop: 4 }}>
-          <Box
+        <Box
           sx={{
             padding: 4,
             borderRadius: 3,
             boxShadow: 4,
-            backgroundColor: "f9f9f9",
+            backgroundColor: "#f9f9f9",
             display: "flex",
             flexDirection: "column",
             gap: 3,
@@ -125,11 +138,8 @@ const StatisticsPage = () => {
             marginBottom: 4,
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: "bold"}}>
+          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
             Управление выстрелами и сериями
-          </Typography>
-          <Typography variant="body1" sx={{ color: "#757575", maxWidth: 600 }}>
-            Добавьте одиночные выстрелы или запишите прогресс серий по 5 или 10 выстрелов. Это поможет отслеживать вашу точность и достижения.
           </Typography>
           <Box
             sx={{
@@ -156,7 +166,6 @@ const StatisticsPage = () => {
             <TextField
               label="Точность (%)"
               type="number"
-              placeholder="Например, 85"
               value={newShot.value}
               onChange={(e) => setNewShot({ ...newShot, value: e.target.value })}
               sx={{
@@ -194,7 +203,7 @@ const StatisticsPage = () => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => alert("Серия из 5 добавлена!")}
+              onClick={() => handleAddSeries("series5")}
               sx={{
                 minWidth: "180px",
                 borderColor: "#4caf50",
@@ -208,13 +217,12 @@ const StatisticsPage = () => {
                 textTransform: "none",
               }}
             >
-              <span style={{ fontSize: "1.2em", marginRight: "8px" }}>🏅</span>
               Серия из 5
             </Button>
             <Button
               variant="outlined"
               size="large"
-              onClick={() => alert("Серия из 10 добавлена!")}
+              onClick={() => handleAddSeries("series10")}
               sx={{
                 minWidth: "180px",
                 borderColor: "#ff9800",
@@ -228,12 +236,27 @@ const StatisticsPage = () => {
                 textTransform: "none",
               }}
             >
-              <span style={{ fontSize: "1.2em", marginRight: "8px" }}>🎯</span>
               Серия из 10
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => window.location.reload()}
+              sx={{
+                backgroundColor: "#1976d2",
+                color: "#fff",
+                fontWeight: "bold",
+                padding: "10px 20px",
+                "&:hover": { backgroundColor: "#1565c0" },
+                textTransform: "none",
+              }}
+            >
+              Обновить данные
             </Button>
           </Box>
         </Box>
-        <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
+  
+        <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={3}>
           {[{ title: "Точность", data: accuracyData },
             { title: "Количество выстрелов", data: shotsData },
             { title: "Серии по 5 выстрелов", data: series5Data },
@@ -251,26 +274,27 @@ const StatisticsPage = () => {
             </Paper>
           ))}
         </Box>
+  
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "80%",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+            }}
+          >
+            {selectedChart && <Line data={selectedChart} options={chartOptions} />}
+          </Box>
+        </Modal>
       </Container>
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "80%",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          {selectedChart && <Line data={selectedChart} options={chartOptions} />}
-        </Box>
-      </Modal>
     </>
   );
+  
 };
 
 export default StatisticsPage;
-

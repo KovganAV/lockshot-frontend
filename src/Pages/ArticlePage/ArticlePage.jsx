@@ -1,24 +1,31 @@
+import { useState, useEffect } from "react";
 import { Container, Typography, Box, Paper } from "@mui/material";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 
 const ArticlePage = () => {
-  const articleData = {
-    title: "Как улучшить свои навыки стрельбы?",
-    content: `
-      Стрельба — это не только физическое мастерство, но и ментальная дисциплина.
-      Чтобы стать лучше, важно регулярно тренироваться, анализировать свои ошибки 
-      и использовать современные методы улучшения. 
-      
-      Вот несколько советов:
-      1. Регулярно занимайтесь упражнениями для улучшения устойчивости.
-      2. Практикуйтесь с различными видами оружия.
-      3. Анализируйте свои результаты после каждой тренировки.
-      4. Используйте современные технологии для мониторинга прогресса.
-    `,
-    date: "23 декабря 2024",
-    author: "Автор: Иван Иванов",
-    image: "https://source.unsplash.com/800x400/?shooting",
-  };
+  const { id } = useParams();
+  const [articleData, setArticleData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        const response = await axios.get(`/api/articles/${id}`);
+        setArticleData(response.data);
+      } catch (error) {
+        console.error("Error fetching article:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
+  }, [id]);
+
+  if (loading) return <Typography>Loading...</Typography>;
+  if (!articleData) return <Typography>Article not found</Typography>;
 
   return (
     <Container maxWidth="md" sx={{ marginTop: 4, marginBottom: 4 }}>
@@ -27,11 +34,9 @@ const ArticlePage = () => {
         <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
           {articleData.title}
         </Typography>
-
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
           {articleData.date} • {articleData.author}
         </Typography>
-
         {articleData.image && (
           <Box
             component="img"
@@ -46,7 +51,6 @@ const ArticlePage = () => {
             }}
           />
         )}
-
         <Typography variant="body1" sx={{ lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
           {articleData.content}
         </Typography>

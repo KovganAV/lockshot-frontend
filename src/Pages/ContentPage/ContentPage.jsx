@@ -1,35 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
+import axios from "axios";
 
 const ContentPage = () => {
   const navigate = useNavigate();
-
-  const articles = [
-    { id: 1, title: "Советы по улучшению меткости", description: "Узнайте, как улучшить свою меткость с помощью простых упражнений." },
-    { id: 2, title: "Техника дыхания для стрельбы", description: "Контроль дыхания может существенно улучшить вашу точность." },
-    { id: 3, title: "Лучшие аксессуары для стрельбы", description: "Обзор самых полезных аксессуаров для тренировок." },
-  ];
-
-  const videos = [
-    { id: 1, title: "Основы стрельбы", videoId: "dQw4w9WgXcQ" },
-    { id: 2, title: "Секреты точности", videoId: "oHg5SJYRHA0" },
-    { id: 3, title: "Разбор ошибок начинающих", videoId: "9bZkp7q19f0" },
-  ];
-
+  const [articles, setArticles] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const [articlesRes, videosRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/articles"),
+          axios.get("http://localhost:5000/api/videos"),
+        ]);
+        setArticles(articlesRes.data);
+        setVideos(videosRes.data);
+      } catch (error) {
+        console.error("Error fetching content:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, []);
 
   const filteredArticles = articles.filter((article) =>
     article.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleArticleClick = (id) => {
-    navigate(`/articles/${id}`);
-  };
+  const handleArticleClick = (id) => navigate(`/articles/${id}`);
+  const handleVideoClick = (id) => navigate(`/videos/${id}`);
 
-  const handleVideoClick = (id) => {
-    navigate(`/videos/${id}`);
-  };
+  if (loading) return <p>Loading...</p>;
 
   return (
     <>
