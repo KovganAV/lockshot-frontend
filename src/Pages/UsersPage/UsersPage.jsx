@@ -29,7 +29,6 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Загрузка данных о пользователях
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -47,9 +46,8 @@ const UsersPage = () => {
     fetchUsers();
   }, []);
 
-  // Фильтрация пользователей по поисковому запросу
   const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) 
   );
 
   const handleUserClick = (user) => {
@@ -75,7 +73,7 @@ const UsersPage = () => {
 
   if (error) {
     return (
-      <Container maxWidth="md">
+      <Container maxWidth="xl">
         <AuthHeader />
         <Typography textAlign="center" sx={{ marginTop: 4 }} color="error">
           {error}
@@ -85,7 +83,7 @@ const UsersPage = () => {
   }
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="xl">
       <AuthHeader />
       <TextField
         label="Поиск пользователя"
@@ -95,7 +93,7 @@ const UsersPage = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{ marginBottom: 2, marginTop: 2 }}
       />
-      <List>
+      <List >
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
             <ListItem
@@ -123,8 +121,6 @@ const UsersPage = () => {
           </Typography>
         )}
       </List>
-
-      {/* Modal */}
       <Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="sm">
         <DialogTitle>{selectedUser?.name}</DialogTitle>
         <DialogContent>

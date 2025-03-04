@@ -13,6 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* В твоем глобальном CSS-файле, например, index.css */
+.MuiContainer-root {
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+
 a {
   font-weight: 500;
   color: #1e1e1f;

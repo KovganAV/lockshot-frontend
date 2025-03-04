@@ -12,7 +12,7 @@ const VideoPage = () => {
     const fetchVideoData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("/api/videos/1"); // Замените "/api/videos/1" на актуальный URL
+        const response = await axios.get("/api/videos/1"); 
         setVideoData(response.data);
       } catch (err) {
         console.error("Ошибка при загрузке видео:", err);
