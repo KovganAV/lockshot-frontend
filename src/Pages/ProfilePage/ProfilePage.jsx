@@ -44,6 +44,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const toggleColorMode = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
@@ -117,6 +118,34 @@ const ProfilePage = () => {
 
   const handleEditModalClose = () => setIsEditModalOpen(false);
 
+  const handleAvatarUpload = async () => {
+    if (!selectedFile) return;
+
+    const token = localStorage.getItem("authToken");
+    const formData = new FormData();
+    formData.append("avatar", selectedFile);
+    formData.append("userId", profileData.id);
+
+    try {
+      const response = await axios.post("https://localhost:7044/api/Users/avatar", formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setProfileData(prev => ({
+        ...prev,
+        avatar: response.data.avatarUrl
+      }));
+      
+      setSelectedFile(null);
+    } catch (err) {
+      console.error("Failed to upload avatar:", err);
+      setError("Failed to upload avatar");
+    }
+  };
+
   const handleProfileSave = async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -128,6 +157,11 @@ const ProfilePage = () => {
       await axios.put("https://localhost:7044/api/Users/profile", profileData, {
         headers: { Authorization: `${token}` }
       });
+      
+      if (selectedFile) {
+        await handleAvatarUpload();
+      }
+      
       setIsEditModalOpen(false);
     } catch (err) {
       console.error("Failed to save profile:", err);
@@ -205,19 +239,19 @@ const ProfilePage = () => {
               <ListItemIcon>
                 <EditIcon color="primary" />
               </ListItemIcon>
-              <ListItemText primary="Редактировать профиль" />
+              <ListItemText primary="Edit Profile" />
             </MenuItem>
             <MenuItem onClick={toggleColorMode}>
               <ListItemIcon>
                 {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
               </ListItemIcon>
-              <ListItemText primary={mode === 'dark' ? "Светлая тема" : "Темная тема"} />
+              <ListItemText primary={mode === 'dark' ? "Light Theme" : "Dark Theme"} />
             </MenuItem>
             <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
               <ListItemIcon>
                 <LogoutIcon color="error" />
               </ListItemIcon>
-              <ListItemText primary="Выйти" />
+              <ListItemText primary="Logout" />
             </MenuItem>
           </Menu>
           
@@ -346,18 +380,29 @@ const ProfilePage = () => {
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Edit Profile
             </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+              <Avatar
+                src={selectedFile ? URL.createObjectURL(selectedFile) : profileData.avatarUrl}
+                sx={{ width: 100, height: 100, mb: 2 }}
+              />
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="avatar-upload"
+                type="file"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+              />
+              <label htmlFor="avatar-upload">
+                <Button variant="outlined" component="span">
+                  Change Photo
+                </Button>
+              </label>
+            </Box>
             <TextField
               fullWidth
               label="Name"
               value={profileData.name}
               onChange={(e) => handleProfileChange("name", e.target.value)}
-              sx={{ marginBottom: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Avatar URL"
-              value={profileData.avatarUrl}
-              onChange={(e) => handleProfileChange("avatarUrl", e.target.value)}
               sx={{ marginBottom: 2 }}
             />
             <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>

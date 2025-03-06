@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Box, Container, Typography, Paper, TextField, ThemeProvider, createTheme } from "@mui/material";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
 
@@ -9,6 +10,13 @@ const ContentPage = () => {
   const [videos, setVideos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  
+  const [mode] = useState(localStorage.getItem('themeMode') || 'light');
+  const theme = createTheme({
+    palette: {
+      mode: mode,
+    },
+  });
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -36,85 +44,96 @@ const ContentPage = () => {
   const handleArticleClick = (id) => navigate(`/articles/${id}`);
   const handleVideoClick = (id) => navigate(`/videos/${id}`);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <ThemeProvider theme={theme}>
+        <Box display="flex" justifyContent="center" alignItems="center" height="100vh" bgcolor="background.default">
+          <Typography>Загрузка...</Typography>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   return (
-    <>
-      <AuthHeader />
-      <main style={{ padding: "20px" }}>
-        <div style={{ marginBottom: "20px" }}>
-          <input
-            type="text"
-            placeholder="Поиск статей..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px",
-              fontSize: "16px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
-          />
-        </div>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+        <AuthHeader />
+        <Container maxWidth="lg" sx={{ py: 3, px: { xs: 3, sm: 4, md: 6 } }}>
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              placeholder="Поиск статей..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ bgcolor: 'background.paper' }}
+            />
+          </Box>
 
-        <section style={{ marginBottom: "40px" }}>
-          <div style={{ display: "grid", gap: "20px", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-            {filteredArticles.length > 0 ? (
-              filteredArticles.map((article) => (
-                <div
-                  key={article.id}
-                  onClick={() => handleArticleClick(article.id)}
-                  style={{
-                    border: "1px solid #ccc",
-                    borderRadius: "8px",
-                    padding: "15px",
-                    backgroundColor: "#f9f9f9",
-                    cursor: "pointer",
-                  }}
-                >
-                  <p style={{ color: "#007BFF", fontSize: "18px", fontWeight: "bold" }}>
-                    {article.title}
-                  </p>
-                  <p>{article.description}</p>
-                </div>
-              ))
-            ) : (
-              <p>Ничего не найдено.</p>
-            )}
-          </div>
-        </section>
+          <Box sx={{ mb: 5 }}>
+            <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={3}>
+              {filteredArticles.length > 0 ? (
+                filteredArticles.map((article) => (
+                  <Paper
+                    key={article.id}
+                    onClick={() => handleArticleClick(article.id)}
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: 'action.hover' },
+                      bgcolor: 'background.paper'
+                    }}
+                  >
+                    <Typography variant="h6" color="primary" gutterBottom>
+                      {article.title}
+                    </Typography>
+                    <Typography color="text.secondary">
+                      {article.description}
+                    </Typography>
+                  </Paper>
+                ))
+              ) : (
+                <Typography color="text.secondary">Ничего не найдено.</Typography>
+              )}
+            </Box>
+          </Box>
 
-        <section>
-          <div style={{ display: "grid", gap: "20px", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+          <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={3}>
             {videos.map((video) => (
-              <div
+              <Paper
                 key={video.id}
                 onClick={() => handleVideoClick(video.id)}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                  padding: "15px",
-                  backgroundColor: "#f9f9f9",
-                  cursor: "pointer",
+                sx={{
+                  p: 2,
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'action.hover' },
+                  bgcolor: 'background.paper'
                 }}
               >
-                <h3>{video.title}</h3>
-                <iframe
-                  width="100%"
-                  height="200"
-                  src={`https://www.youtube.com/embed/${video.videoId}`}
-                  title={video.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
+                <Typography variant="h6" gutterBottom color="text.primary">
+                  {video.title}
+                </Typography>
+                <Box sx={{ position: 'relative', paddingTop: '56.25%' }}>
+                  <iframe
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%'
+                    }}
+                    src={`https://www.youtube.com/embed/${video.videoId}`}
+                    title={video.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </Box>
+              </Paper>
             ))}
-          </div>
-        </section>
-      </main>
-    </>
+          </Box>
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 };
 
