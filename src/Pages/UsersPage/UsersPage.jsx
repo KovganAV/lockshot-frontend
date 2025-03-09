@@ -16,6 +16,8 @@ import {
   Dialog,
   ThemeProvider,
   createTheme,
+  Zoom,
+  Grow,
 } from "@mui/material";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import RifleIcon from "@mui/icons-material/SportsRugby";
@@ -116,30 +118,33 @@ const UsersPage = () => {
           />
           <List>
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <ListItem
-                  key={user.id}
-                  sx={{
-                    border: "1px solid",
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    mb: 2,
-                    bgcolor: 'background.paper',
-                    "&:hover": {
-                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                      cursor: "pointer",
-                    },
-                  }}
-                  onClick={() => handleUserClick(user)}
-                >
-                  <ListItemAvatar>
-                    <Avatar src={user.avatar} alt={user.name} />
-                  </ListItemAvatar>
-                  <ListItemText 
-                    primary={<Typography sx={{ color: theme.palette.text.username }}>{user.name}</Typography>}
-                    secondary={user.email}
-                  />
-                </ListItem>
+              filteredUsers.map((user, index) => (
+                <Grow in={true} timeout={500 + index * 100} key={user.id}>
+                  <ListItem
+                    sx={{
+                      border: "1px solid",
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      mb: 2,
+                      bgcolor: 'background.paper',
+                      "&:hover": {
+                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                        cursor: "pointer",
+                        transform: "scale(1.02)",
+                        transition: "transform 0.2s ease-in-out",
+                      },
+                    }}
+                    onClick={() => handleUserClick(user)}
+                  >
+                    <ListItemAvatar>
+                      <Avatar src={user.avatar} alt={user.name} />
+                    </ListItemAvatar>
+                    <ListItemText 
+                      primary={<Typography sx={{ color: theme.palette.text.username }}>{user.name}</Typography>}
+                      secondary={user.email}
+                    />
+                  </ListItem>
+                </Grow>
               ))
             ) : (
               <Typography textAlign="center" color="text.secondary">
@@ -147,7 +152,13 @@ const UsersPage = () => {
               </Typography>
             )}
           </List>
-          <Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="sm">
+          <Dialog 
+            open={isModalOpen} 
+            onClose={handleCloseModal} 
+            fullWidth 
+            maxWidth="sm"
+            TransitionComponent={Zoom}
+          >
             <DialogTitle>
               <Typography sx={{ color: theme.palette.text.username }}>{selectedUser?.name}</Typography>
             </DialogTitle>
@@ -170,38 +181,42 @@ const UsersPage = () => {
                 </Grid>
                 <Grid item container spacing={2} justifyContent="center">
                   {selectedUser?.statistics?.map((item, index) => (
-                    <Grid item key={index}>
-                      <Paper elevation={3} sx={{ p: 2, textAlign: "center", bgcolor: 'background.paper' }}>
-                        <Typography variant="h6" fontWeight="bold" sx={{ color: theme.palette.text.username }}>{item.value}</Typography>
-                        <Typography color="text.secondary">{item.label}</Typography>
+                    <Grow in={true} timeout={500 + index * 100} key={index}>
+                      <Grid item>
+                        <Paper elevation={3} sx={{ p: 2, textAlign: "center", bgcolor: 'background.paper' }}>
+                          <Typography variant="h6" fontWeight="bold" sx={{ color: theme.palette.text.username }}>{item.value}</Typography>
+                          <Typography color="text.secondary">{item.label}</Typography>
+                        </Paper>
+                      </Grid>
+                    </Grow>
+                  ))}
+                  <Grow in={true} timeout={800}>
+                    <Grid item>
+                      <Paper
+                        elevation={3}
+                        sx={{
+                          p: 2,
+                          textAlign: "center",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          bgcolor: 'background.paper'
+                        }}
+                      >
+                        {selectedUser?.weaponType === "rifle" ? (
+                          <RifleIcon fontSize="large" />
+                        ) : (
+                          <PistolIcon fontSize="large" />
+                        )}
+                        <Box>
+                          <Typography variant="h6" fontWeight="bold" sx={{ color: theme.palette.text.username }}>
+                            {selectedUser?.weaponType === "rifle" ? "Rifle" : "Pistol"}
+                          </Typography>
+                          <Typography color="text.secondary">Weapon Type</Typography>
+                        </Box>
                       </Paper>
                     </Grid>
-                  ))}
-                  <Grid item>
-                    <Paper
-                      elevation={3}
-                      sx={{
-                        p: 2,
-                        textAlign: "center",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        bgcolor: 'background.paper'
-                      }}
-                    >
-                      {selectedUser?.weaponType === "rifle" ? (
-                        <RifleIcon fontSize="large" />
-                      ) : (
-                        <PistolIcon fontSize="large" />
-                      )}
-                      <Box>
-                        <Typography variant="h6" fontWeight="bold" sx={{ color: theme.palette.text.username }}>
-                          {selectedUser?.weaponType === "rifle" ? "Rifle" : "Pistol"}
-                        </Typography>
-                        <Typography color="text.secondary">Weapon Type</Typography>
-                      </Box>
-                    </Paper>
-                  </Grid>
+                  </Grow>
                 </Grid>
               </Grid>
             </DialogContent>

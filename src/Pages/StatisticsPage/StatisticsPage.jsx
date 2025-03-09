@@ -32,7 +32,7 @@ const StatisticsPage = () => {
                 throw new Error("Missing auth token");
             }
 
-            const response = await axios.get("/api/allHits", {
+            const response = await axios.get("/api/hits", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log("Server data:", response.data);

@@ -44,7 +44,9 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [newUsername, setNewUsername] = useState('');
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const toggleColorMode = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
@@ -83,6 +85,7 @@ const ProfilePage = () => {
         ...profileResponse.data,
         statistics: statsResponse.data
       });
+      setNewUsername(profileResponse.data.username);
     } catch (err) {
       console.error("Failed to load profile data:", err);
       setError("Failed to load profile data");
@@ -116,15 +119,27 @@ const ProfilePage = () => {
     handleMenuClose();
   };
 
-  const handleEditModalClose = () => setIsEditModalOpen(false);
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setAvatarPreview(null);
+    setAvatarFile(null);
+  };
 
-  const handleAvatarUpload = async () => {
-    if (!selectedFile) return;
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
 
     const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Authorization token is missing");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("avatar", selectedFile);
-    formData.append("userId", profileData.id);
+    formData.append("avatar", file);
 
     try {
       const response = await axios.post("https://localhost:7044/api/Users/avatar", formData, {
@@ -133,13 +148,12 @@ const ProfilePage = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       setProfileData(prev => ({
         ...prev,
-        avatar: response.data.avatarUrl
+        avatarUrl: response.data.avatarUrl
       }));
-      
-      setSelectedFile(null);
+
     } catch (err) {
       console.error("Failed to upload avatar:", err);
       setError("Failed to upload avatar");
@@ -154,15 +168,20 @@ const ProfilePage = () => {
     }
 
     try {
-      await axios.put("https://localhost:7044/api/Users/profile", profileData, {
-        headers: { Authorization: `${token}` }
+      await axios.put("https://localhost:7044/api/Users/profile", {
+        ...profileData,
+        username: newUsername
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
+
+      setProfileData(prev => ({
+        ...prev,
+        username: newUsername
+      }));
       
-      if (selectedFile) {
-        await handleAvatarUpload();
-      }
-      
-      setIsEditModalOpen(false);
+      handleEditModalClose();
+      await fetchProfileData();
     } catch (err) {
       console.error("Failed to save profile:", err);
       setError("Failed to save changes");
@@ -170,7 +189,11 @@ const ProfilePage = () => {
   };
 
   const handleProfileChange = (field, value) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
+    if (field === 'username') {
+      setNewUsername(value);
+    } else {
+      setProfileData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   if (isLoading) {
@@ -333,7 +356,7 @@ const ProfilePage = () => {
                       elevation={3}
                       sx={{ padding: "16px", textAlign: "center", display: "flex", alignItems: "center", gap: "8px" }}
                     >
-                      {profileData.mostUsedWeapon === "rifle" ? (
+                      {profileData.statistics?.mostUsedWeapon === "rifle" ? (
                         <RifleIcon fontSize="large" />
                       ) : (
                         <PistolIcon fontSize="large" />
@@ -382,7 +405,7 @@ const ProfilePage = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
               <Avatar
-                src={selectedFile ? URL.createObjectURL(selectedFile) : profileData.avatarUrl}
+                src={avatarPreview || profileData.avatarUrl}
                 sx={{ width: 100, height: 100, mb: 2 }}
               />
               <input
@@ -390,7 +413,7 @@ const ProfilePage = () => {
                 style={{ display: 'none' }}
                 id="avatar-upload"
                 type="file"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
+                onChange={handleFileChange}
               />
               <label htmlFor="avatar-upload">
                 <Button variant="outlined" component="span">
@@ -400,25 +423,11 @@ const ProfilePage = () => {
             </Box>
             <TextField
               fullWidth
-              label="Name"
-              value={profileData.name}
-              onChange={(e) => handleProfileChange("name", e.target.value)}
+              label="Username"
+              value={newUsername}
+              onChange={(e) => handleProfileChange("username", e.target.value)}
               sx={{ marginBottom: 2 }}
             />
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-              <Button
-                variant={profileData.weaponType === "rifle" ? "contained" : "outlined"}
-                onClick={() => handleProfileChange("weaponType", "rifle")}
-              >
-                Rifle
-              </Button>
-              <Button
-                variant={profileData.weaponType === "pistol" ? "contained" : "outlined"}
-                onClick={() => handleProfileChange("weaponType", "pistol")}
-              >
-                Pistol
-              </Button>
-            </Box>
             <Button variant="contained" onClick={handleProfileSave} fullWidth>
               Save
             </Button>

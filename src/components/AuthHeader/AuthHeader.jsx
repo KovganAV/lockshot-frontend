@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const HeaderAuthorized = () => {
   return (
-    <AppBar position="relative" color="default" elevation={1} sx={{ width: '100%' }}>
+    <AppBar position="static" color="default" elevation={1} sx={{ width: '100%' }}>
           <Toolbar sx={{ justifyContent: "space-between"}}>
            <Link to = "/profile">
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" fontWeight="bold" color="text.primary">
             Lockshot
           </Typography>
         </Link>
