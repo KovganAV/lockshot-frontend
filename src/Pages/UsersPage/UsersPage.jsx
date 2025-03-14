@@ -18,10 +18,13 @@ import {
   createTheme,
   Zoom,
   Grow,
+  IconButton,
+  Button,
 } from "@mui/material";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import RifleIcon from "@mui/icons-material/SportsRugby";
 import PistolIcon from "@mui/icons-material/SportsHandball";
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import axios from "axios";
 
 const UsersPage = () => {
@@ -31,6 +34,7 @@ const UsersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   
   const [mode] = useState(localStorage.getItem('themeMode') || 'light');
   const theme = createTheme({
@@ -58,6 +62,22 @@ const UsersPage = () => {
 
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.pageYOffset > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) 
@@ -114,7 +134,7 @@ const UsersPage = () => {
             fullWidth
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ mb: 2, mt: 2 }}
+            sx={{ mb: 2, mt: 3 }}
           />
           <List>
             {filteredUsers.length > 0 ? (
@@ -219,8 +239,33 @@ const UsersPage = () => {
                   </Grow>
                 </Grid>
               </Grid>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button variant="contained" onClick={handleCloseModal}>
+                  Close
+                </Button>
+              </Box>
             </DialogContent>
           </Dialog>
+          <Zoom in={showScrollTop}>
+            <IconButton
+              size="small"
+              onClick={scrollToTop}
+              sx={{
+                position: 'fixed',
+                bottom: 16,
+                right: 16,
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+                width: 32,
+                height: 32
+              }}
+            >
+              <KeyboardArrowUpIcon fontSize="small" />
+            </IconButton>
+          </Zoom>
         </Container>
       </Box>
     </ThemeProvider>

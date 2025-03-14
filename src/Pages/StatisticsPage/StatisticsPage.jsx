@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { Box, Container, Typography, Paper, Button, TextField, Modal, ThemeProvider, createTheme } from "@mui/material";
+import { Box, Container, Typography, Paper, Button, TextField, Modal, ThemeProvider, createTheme, Fab, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress, useMediaQuery, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
 import "chart.js/auto";
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import SendIcon from '@mui/icons-material/Send';
 
 const StatisticsPage = () => {
   const [mode] = useState(localStorage.getItem('themeMode') || 'light');
@@ -12,39 +15,104 @@ const StatisticsPage = () => {
       mode: mode,
     },
   });
+  
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [accuracyData, setAccuracyData] = useState([]);
-  const [shotsData, setShotsData] = useState([]);
-  const [series5Data, setSeries5Data] = useState([]);
-  const [series10Data, setSeries10Data] = useState([]);
+  const [weaponTypeData, setWeaponTypeData] = useState([]);
+  const [distanceData, setDistanceData] = useState([]);
+  const [metricsData, setMetricsData] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChart, setSelectedChart] = useState(null);
-  const [newShot, setNewShot] = useState({ date: "", value: "" });
+  const [newShot, setNewShot] = useState({ 
+    date: "", 
+    weaponType: "",
+    score: "",
+    distance: "",
+    metrics: "meters"
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isAiTyping, setIsAiTyping] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.pageYOffset > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            console.log("Token in localStorage:", localStorage.getItem("authToken"));
             const token = localStorage.getItem("authToken");
             if (!token) {
                 throw new Error("Missing auth token");
             }
 
-            const response = await axios.get("/api/hits", {
+            const response = await axios.get("/api/allHits", {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Server data:", response.data);
-            const data = Array.isArray(response.data) ? response.data : Object.values(response.data);
-            const shots = data
-                .filter(item => item && item.timestamp && item.score !== undefined)
-                .map(item => ({
-                    date: new Date(item.timestamp).toLocaleDateString(),
-                    value: item.score,
-                }));
 
-            setShotsData(shots);
+            const data = Array.isArray(response.data) ? response.data : [];
+            
+            const accuracyProcessed = data.map(item => ({
+                date: new Date(item.timestamp).toLocaleDateString(),
+                value: item.score
+            }));
+            setAccuracyData(accuracyProcessed);
+
+            const weaponGroups = data.reduce((acc, item) => {
+                if (!acc[item.weaponType]) {
+                    acc[item.weaponType] = {sum: 0, count: 0};
+                }
+                acc[item.weaponType].sum += item.score;
+                acc[item.weaponType].count++;
+                return acc;
+            }, {});
+
+            const weaponProcessed = Object.entries(weaponGroups).map(([type, stats]) => ({
+                date: type,
+                value: Math.round(stats.sum / stats.count)
+            }));
+            setWeaponTypeData(weaponProcessed);
+
+            const distanceGroups = data.reduce((acc, item) => {
+                const distance = `${item.distance}m`;
+                if (!acc[distance]) {
+                    acc[distance] = {sum: 0, count: 0};
+                }
+                acc[distance].sum += item.score;
+                acc[distance].count++;
+                return acc;
+            }, {});
+
+            const distanceProcessed = Object.entries(distanceGroups).map(([dist, stats]) => ({
+                date: dist,
+                value: Math.round(stats.sum / stats.count)
+            }));
+            setDistanceData(distanceProcessed);
+
+            const metricsProcessed = data.map(item => ({
+                date: new Date(item.timestamp).toLocaleDateString(),
+                value: Math.round(item.metrics * 100)
+            }));
+            setMetricsData(metricsProcessed);
+
         } catch (err) {
             console.error("Error loading shots data:", err);
             setError("Failed to load shots data. Please try again later.");
@@ -57,14 +125,23 @@ const StatisticsPage = () => {
   }, []);
 
   const handleAddShot = async () => {
-    if (newShot.date && newShot.value) {
+    if (newShot.date && newShot.score && newShot.weaponType && newShot.distance) {
       try {
         const response = await axios.post("/api/Hits", {
           date: newShot.date,
-          value: parseInt(newShot.value, 10),
+          weaponType: newShot.weaponType,
+          score: parseInt(newShot.score, 10),
+          distance: parseInt(newShot.distance, 10),
+          metrics: newShot.metrics
         });
         setAccuracyData((prev) => [...prev, response.data]); 
-        setNewShot({ date: "", value: "" });
+        setNewShot({ 
+          date: "", 
+          weaponType: "",
+          score: "",
+          distance: "",
+          metrics: "meters"
+        });
       } catch (err) {
         console.error("Error adding shot:", err);
         alert("Failed to add shot. Please try again later.");
@@ -72,24 +149,30 @@ const StatisticsPage = () => {
     }
   };
 
-  const handleAddSeries = async (seriesType) => {
-    try {
-      const response = await axios.post(`/api/statistics/${seriesType}`);
-      if (seriesType === "series5") {
-        setSeries5Data((prev) => [...prev, ...response.data]);
-      } else if (seriesType === "series10") {
-        setSeries10Data((prev) => [...prev, ...response.data]);
-      }
-      alert(`${seriesType === "series5" ? "5-shot" : "10-shot"} series added!`);
-    } catch (err) {
-      console.error(`Error adding ${seriesType}:`, err);
-      alert("Failed to add series. Please try again later.");
-    }
-  };
-
   const chartOptions = {
     responsive: true,
-    plugins: { legend: { display: false } },
+    maintainAspectRatio: !isMobile,
+    plugins: { 
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: isMobile ? 10 : 12
+          }
+        }
+      },
+      y: {
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12
+          }
+        }
+      }
+    }
   };
 
   const generateChartData = (data, label) => ({
@@ -108,6 +191,28 @@ const StatisticsPage = () => {
   const handleChartClick = (chartData) => {
     setSelectedChart(chartData);
     setModalOpen(true);
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    const userMessage = newMessage;
+    setNewMessage('');
+    setChatMessages(prev => [...prev, { text: userMessage, isUser: true }]);
+    setIsAiTyping(true);
+
+    try {
+      const response = await axios.post('http://localhost:5028/generate', {
+        message: userMessage
+      });
+
+      setChatMessages(prev => [...prev, { text: response.data, isUser: false }]);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setChatMessages(prev => [...prev, { text: 'Sorry, I encountered an error. Please try again.', isUser: false }]);
+    } finally {
+      setIsAiTyping(false);
+    }
   };
 
   if (loading) {
@@ -134,10 +239,10 @@ const StatisticsPage = () => {
     <ThemeProvider theme={theme}>
       <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
         <AuthHeader />
-        <Container maxWidth="lg" sx={{ marginTop: 4 }}>
+        <Container maxWidth="lg" sx={{ marginTop: 4, px: isMobile ? 1 : 2 }}>
           <Box
             sx={{
-              padding: 4,
+              padding: isMobile ? 2 : 4,
               borderRadius: 3,
               boxShadow: 4,
               backgroundColor: "background.paper",
@@ -149,13 +254,14 @@ const StatisticsPage = () => {
               marginBottom: 4,
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: "bold", color: 'text.primary' }}>
-              Shots and Series Management
+            <Typography variant="h5" sx={{ fontWeight: "bold", color: 'text.primary', fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
+              Shooting Statistics
             </Typography>
             <Box
               sx={{
                 display: "flex",
                 gap: 2,
+                flexDirection: isMobile ? 'column' : 'row',
                 flexWrap: "wrap",
                 justifyContent: "center",
                 alignItems: "center",
@@ -168,27 +274,66 @@ const StatisticsPage = () => {
                 value={newShot.date}
                 onChange={(e) => setNewShot({ ...newShot, date: e.target.value })}
                 InputLabelProps={{ shrink: true }}
+                fullWidth={isMobile}
                 sx={{
-                  minWidth: "200px",
+                  minWidth: isMobile ? "100%" : "200px",
                   boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
                   borderRadius: 2,
                 }}
               />
+              <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? "100%" : "200px" }}>
+                <InputLabel>Weapon Type</InputLabel>
+                <Select
+                  value={newShot.weaponType}
+                  label="Weapon Type"
+                  onChange={(e) => setNewShot({ ...newShot, weaponType: e.target.value })}
+                >
+                  <MenuItem value="Pistol">Pistol</MenuItem>
+                  <MenuItem value="Rifle">Rifle</MenuItem>
+                </Select>
+              </FormControl>
               <TextField
-                label="Accuracy (%)"
+                label="Score"
                 type="number"
-                value={newShot.value}
-                onChange={(e) => setNewShot({ ...newShot, value: e.target.value })}
+                value={newShot.score}
+                onChange={(e) => setNewShot({ ...newShot, score: e.target.value })}
+                fullWidth={isMobile}
                 sx={{
-                  minWidth: "200px",
+                  minWidth: isMobile ? "100%" : "200px",
                   boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
                   borderRadius: 2,
                 }}
               />
+              <Box sx={{ display: 'flex', gap: 1, width: isMobile ? "100%" : "auto" }}>
+                <TextField
+                  label="Distance"
+                  type="number"
+                  value={newShot.distance}
+                  onChange={(e) => setNewShot({ ...newShot, distance: e.target.value })}
+                  fullWidth={isMobile}
+                  sx={{
+                    minWidth: isMobile ? "70%" : "150px",
+                    boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
+                    borderRadius: 2,
+                  }}
+                />
+                <FormControl sx={{ minWidth: isMobile ? "30%" : "100px" }}>
+                  <InputLabel>Units</InputLabel>
+                  <Select
+                    value={newShot.metrics}
+                    label="Units"
+                    onChange={(e) => setNewShot({ ...newShot, metrics: e.target.value })}
+                  >
+                    <MenuItem value="meters">m</MenuItem>
+                    <MenuItem value="yards">yd</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
               <Button
                 variant="contained"
                 size="large"
                 onClick={handleAddShot}
+                fullWidth={isMobile}
                 sx={{
                   backgroundColor: "primary.main",
                   color: "primary.contrastText",
@@ -202,97 +347,36 @@ const StatisticsPage = () => {
                 Add Shot
               </Button>
             </Box>
-            <Box
-              sx={{
-                display: "flex",
-                gap: 4,
-                justifyContent: "center",
-                flexWrap: "wrap",
-                marginTop: 3,
-              }}
-            >
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => handleAddSeries("series5")}
-                sx={{
-                  minWidth: "180px",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                  fontWeight: "bold",
-                  padding: "10px 20px",
-                  "&:hover": {
-                    backgroundColor: "primary.light",
-                    borderColor: "primary.main",
-                  },
-                  textTransform: "none",
-                }}
-              >
-                5-Shot Series
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => handleAddSeries("series10")}
-                sx={{
-                  minWidth: "180px",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                  fontWeight: "bold",
-                  padding: "10px 20px",
-                  "&:hover": {
-                    backgroundColor: "primary.light",
-                    borderColor: "primary.main",
-                  },
-                  textTransform: "none",
-                }}
-              >
-                10-Shot Series
-              </Button>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => window.location.reload()}
-                sx={{
-                  backgroundColor: "primary.main",
-                  color: "primary.contrastText",
-                  fontWeight: "bold",
-                  padding: "10px 20px",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                  textTransform: "none",
-                }}
-              >
-                Refresh Data
-              </Button>
-            </Box>
           </Box>
     
-          <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
-            {[{ title: "Accuracy", data: accuracyData },
-              { title: "Number of Shots", data: shotsData },
-              { title: "5-Shot Series", data: series5Data },
-              { title: "10-Shot Series", data: series10Data }].map((chart, index) => (
+          <Box display="grid" gridTemplateColumns={isMobile ? "1fr" : "repeat(2, 1fr)"} gap={3}>
+            {[
+              { title: "Scores Over Time", data: accuracyData },
+              { title: "Average Score by Weapon", data: weaponTypeData },
+              { title: "Average Score by Distance", data: distanceData },
+              { title: "Metrics Over Time (%)", data: metricsData }
+            ].map((chart, index) => (
               <Paper
                 key={index}
                 elevation={3}
                 sx={{ 
-                  padding: 3, 
+                  padding: isMobile ? 2 : 3, 
                   cursor: "pointer",
                   backgroundColor: "background.paper"
                 }}
                 onClick={() => handleChartClick(generateChartData(chart.data, chart.title))}
               >
-                <Typography variant="h6" gutterBottom color="text.primary">
+                <Typography variant="h6" gutterBottom color="text.primary" fontSize={isMobile ? '1rem' : '1.25rem'}>
                   {chart.title}
                 </Typography>
-                <Line data={generateChartData(chart.data, chart.title)} options={chartOptions} />
+                <Line data={generateChartData(chart.data, chart.title)} options={chartOptions} height={isMobile ? 200 : undefined} />
               </Paper>
             ))}
           </Box>
 
           <Box
             sx={{
-              padding: 4,
+              padding: isMobile ? 2 : 4,
               marginTop: 4,
               borderRadius: 3,
               boxShadow: 4,
@@ -300,11 +384,11 @@ const StatisticsPage = () => {
               textAlign: "center"
             }}
           >
-            <Typography variant="h6" sx={{ color: 'text.primary', marginBottom: 2 }}>
-              AI Tip
+            <Typography variant="h6" sx={{ color: 'text.primary', marginBottom: 2, fontSize: isMobile ? '1rem' : '1.25rem' }}>
+              AI Assistant
             </Typography>
-            <Typography sx={{ color: 'text.secondary' }}>
-              Based on your data, AI will suggest personalized recommendations to improve your shooting results.
+            <Typography sx={{ color: 'text.secondary', fontSize: isMobile ? '0.875rem' : '1rem' }}>
+              Based on your data, AI will provide personalized recommendations to improve your shooting results.
             </Typography>
           </Box>
     
@@ -315,15 +399,127 @@ const StatisticsPage = () => {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: "80%",
+                width: isMobile ? "95%" : "80%",
                 bgcolor: "background.paper",
                 boxShadow: 24,
-                p: 4,
+                p: isMobile ? 2 : 4,
+                maxHeight: '90vh',
+                overflowY: 'auto'
               }}
             >
               {selectedChart && <Line data={selectedChart} options={chartOptions} />}
             </Box>
           </Modal>
+
+          {showScrollTop && (
+            <Fab
+              color="primary"
+              size="small"
+              onClick={scrollToTop}
+              sx={{
+                position: 'fixed',
+                bottom: isMobile ? 120 : 80,
+                right: 16
+              }}
+            >
+              <KeyboardArrowUpIcon />
+            </Fab>
+          )}
+
+          <Fab
+            color="primary"
+            size="small"
+            onClick={() => setAiDialogOpen(true)}
+            sx={{
+              position: 'fixed',
+              bottom: isMobile ? 60 : 16,
+              right: 16
+            }}
+          >
+            <SmartToyIcon />
+          </Fab>
+
+          <Dialog 
+            open={aiDialogOpen}
+            onClose={() => setAiDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+            sx={{
+              '& .MuiDialog-paper': {
+                margin: isMobile ? '16px' : '32px',
+                width: isMobile ? 'calc(100% - 32px)' : undefined
+              }
+            }}
+          >
+            <DialogTitle sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}>AI Assistant</DialogTitle>
+            <DialogContent>
+              <List sx={{ height: isMobile ? '300px' : '400px', overflowY: 'auto' }}>
+                {chatMessages.map((message, index) => (
+                  <ListItem 
+                    key={index}
+                    sx={{
+                      justifyContent: message.isUser ? 'flex-end' : 'flex-start',
+                      mb: 1
+                    }}
+                  >
+                    <Paper
+                      sx={{
+                        p: isMobile ? 1.5 : 2,
+                        maxWidth: isMobile ? '85%' : '70%',
+                        bgcolor: message.isUser ? 'primary.main' : 'background.paper',
+                        color: message.isUser ? 'primary.contrastText' : 'text.primary',
+                        borderRadius: 2
+                      }}
+                    >
+                      <Typography
+                        sx={{ 
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          fontSize: isMobile ? '0.875rem' : '1rem'
+                        }}
+                      >
+                        {message.text}
+                      </Typography>
+                    </Paper>
+                  </ListItem>
+                ))}
+                {isAiTyping && (
+                  <ListItem>
+                    <CircularProgress size={isMobile ? 16 : 20} />
+                  </ListItem>
+                )}
+              </List>
+              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  size={isMobile ? "small" : "medium"}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleSendMessage}
+                  disabled={isAiTyping}
+                  sx={{ minWidth: 'auto' }}
+                  size={isMobile ? "small" : "medium"}
+                >
+                  <SendIcon />
+                </Button>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setAiDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
         </Container>
       </Box>
     </ThemeProvider>

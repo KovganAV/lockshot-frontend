@@ -110,18 +110,25 @@ const EventsPage = () => {
     return title;
   };
 
-  const filteredEvents = events.filter(event => 
-    event.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredEvents = events.filter(event => {
+    const searchLower = searchQuery.toLowerCase();
+    const titleMatch = event.title.toLowerCase().includes(searchLower);
+    const locationMatch = event.location.toLowerCase().includes(searchLower);
+    const eventDate = new Date(event.date);
+    const dateStr = eventDate.toLocaleDateString();
+    const dateMatch = dateStr.includes(searchLower);
+    
+    return titleMatch || locationMatch || dateMatch;
+  });
 
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
         <AuthHeader />
-        <Container sx={{ marginTop: 4 }}>
+        <Container sx={{ marginTop: 1 }}>
           <TextField
             fullWidth
-            label="Search events"
+            label="Search by title, location or date"
             value={searchQuery}
             onChange={handleSearchChange}
             margin="normal"
@@ -298,13 +305,13 @@ const EventsPage = () => {
                     {selectedEvent.description}
                   </Typography>
                   <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-                    📍 Место: {selectedEvent.location}
+                    📍 Location: {selectedEvent.location}
                   </Typography>
                   <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                    🗓️ Дата: {new Date(selectedEvent.date).toLocaleString()}
+                    🗓️ Date: {new Date(selectedEvent.date).toLocaleString()}
                   </Typography>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button onClick={handleEventDetailsClose}>Закрыть</Button>
+                    <Button onClick={handleEventDetailsClose}>Close</Button>
                   </Box>
                 </>
               )}

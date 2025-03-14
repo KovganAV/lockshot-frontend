@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Box,
   Grid,
-  Paper,
   Typography,
   Avatar, 
   Menu,
@@ -17,6 +16,11 @@ import {
   ListItemText,
   ThemeProvider,
   createTheme,
+  Card,
+  CardContent,
+  Divider,
+  useMediaQuery,
+  useTheme as useMuiTheme
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import RifleIcon from "@mui/icons-material/SportsRugby";
@@ -25,12 +29,18 @@ import EditIcon from "@mui/icons-material/Edit";
 import LogoutIcon from "@mui/icons-material/Logout";
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import GpsFixedIcon from '@mui/icons-material/GpsFixed';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import EqualizerIcon from '@mui/icons-material/Equalizer';
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const muiTheme = useMuiTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const [mode, setMode] = useState(localStorage.getItem('themeMode') || 'light');
   const theme = createTheme({
     palette: {
@@ -45,7 +55,6 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [newUsername, setNewUsername] = useState('');
-  const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
 
   const toggleColorMode = () => {
@@ -122,14 +131,12 @@ const ProfilePage = () => {
   const handleEditModalClose = () => {
     setIsEditModalOpen(false);
     setAvatarPreview(null);
-    setAvatarFile(null);
   };
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
 
     const token = localStorage.getItem("authToken");
@@ -219,16 +226,17 @@ const ProfilePage = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ 
-        height: "100vh", 
-        position: "fixed", 
-        width: "100%", 
-        top: 0, 
-        left: 0,
+        minHeight: "100vh",
+        width: "100%",
         bgcolor: 'background.default',
-        color: 'text.primary'
+        color: 'text.primary',
+        overflow: 'auto'
       }}>
         <AuthHeader />
-        <Box sx={{ height: "calc(100% - 64px)", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ 
+          p: isMobile ? 2 : 3,
+          pt: isMobile ? '80px' : '64px'
+        }}>
           <Menu
             anchorEl={anchorEl}
             open={menuOpen}
@@ -241,16 +249,14 @@ const ProfilePage = () => {
             sx={{
               mt: "3px",
               "& .MuiPaper-root": { 
-                width: "250px", 
-                top: "56px !important", 
-                right: "24px",
+                width: isMobile ? "200px" : "250px",
                 borderRadius: "12px",
                 boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 overflow: 'hidden'
               },
               "& .MuiMenuItem-root": {
-                padding: "12px 24px",
+                padding: isMobile ? "8px 16px" : "12px 24px",
                 transition: "background-color 0.2s ease",
                 "&:hover": {
                   backgroundColor: "action.hover"
@@ -281,9 +287,9 @@ const ProfilePage = () => {
           <IconButton
             onClick={handleMenuOpen}
             sx={{ 
-              position: "absolute", 
-              top: "10%", 
-              right: "2%",
+              position: "fixed", 
+              top: isMobile ? "70px" : "80px",
+              right: isMobile ? "16px" : "24px",
               backgroundColor: "background.paper",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               transition: "all 0.3s ease",
@@ -296,87 +302,190 @@ const ProfilePage = () => {
             <SettingsIcon />
           </IconButton>
 
-          <Grid container justifyContent="center" alignItems="center" sx={{ flexGrow: 1 }}>
-            <Paper elevation={6} sx={{ 
-              padding: "32px", 
-              borderRadius: "12px", 
-              maxWidth: "600px", 
-              width: "100%",
-              maxHeight: "calc(100vh - 100px)",
-              overflowY: "auto",
-              backgroundColor: "background.paper"
-            }}>
-              <Grid container direction="column" alignItems="center" spacing={2}>
-                <Grid item>
-                  <Avatar
-                    src={profileData.avatarUrl || ""}
-                    sx={{ width: 150, height: 150, backgroundColor: "grey.500" }}
-                  />
+          <Card elevation={8} sx={{ 
+            maxWidth: "800px",
+            width: "100%",
+            margin: "0 auto",
+            borderRadius: isMobile ? "16px" : "20px",
+            background: theme.palette.background.paper,
+            backdropFilter: "blur(10px)",
+          }}>
+            <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+                <Avatar
+                  src={profileData.avatarUrl || ""}
+                  sx={{ 
+                    width: isMobile ? 120 : 180, 
+                    height: isMobile ? 120 : 180, 
+                    border: '4px solid',
+                    borderColor: 'primary.main',
+                    mb: 2
+                  }}
+                />
+                <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" gutterBottom align="center">
+                  {profileData.name}
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary" align="center">
+                  ID: {profileData.id}
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary" align="center">
+                  {profileData.mail}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ mb: 4 }} />
+
+              <Grid container spacing={isMobile ? 2 : 3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    height: '100%',
+                    background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)' }
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      p: isMobile ? "12px !important" : 2
+                    }}>
+                      <SpeedIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
+                      <Box>
+                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
+                          {profileData.statistics?.averageScore ? profileData.statistics.averageScore.toFixed(1) : "N/A"}
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Average Score
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
                 </Grid>
-                <Grid item>
-                  <Typography variant="h5" fontWeight="bold">{profileData.name}</Typography>
-                  <Typography variant="subtitle1">ID: {profileData.id}</Typography>
-                  <Typography variant="subtitle2" color="text.secondary">{profileData.mail}</Typography>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    height: '100%',
+                    background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)' }
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      p: isMobile ? "12px !important" : 2
+                    }}>
+                      <GpsFixedIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
+                      <Box>
+                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
+                          {profileData.statistics?.maxDistance ?? "N/A"}
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Max Distance (m)
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
                 </Grid>
-                <Grid item container spacing={2} justifyContent="center">
-                  <Grid item>
-                    <Paper elevation={3} sx={{ padding: "16px", textAlign: "center" }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {profileData.statistics?.averageScore ? profileData.statistics.averageScore.toFixed(1) : "No data"}
-                      </Typography>
-                      <Typography>Average Score</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item>
-                    <Paper elevation={3} sx={{ padding: "16px", textAlign: "center" }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {profileData.statistics?.maxDistance ?? "No data"} m
-                      </Typography>
-                      <Typography>Max Distance</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item>
-                    <Paper elevation={3} sx={{ padding: "16px", textAlign: "center" }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {profileData.statistics?.totalShots ?? "No data"}
-                      </Typography>
-                      <Typography>Total Shots</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item>
-                    <Paper elevation={3} sx={{ padding: "16px", textAlign: "center" }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {profileData.statistics?.averageMetrics ?? "No data"}
-                      </Typography>
-                      <Typography>Metrics</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item>
-                    <Paper
-                      elevation={3}
-                      sx={{ padding: "16px", textAlign: "center", display: "flex", alignItems: "center", gap: "8px" }}
-                    >
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    height: '100%',
+                    background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)' }
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      p: isMobile ? "12px !important" : 2
+                    }}>
+                      <TrackChangesIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
+                      <Box>
+                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
+                          {profileData.statistics?.totalShots ?? "N/A"}
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Total Shots
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Card sx={{ 
+                    height: '100%',
+                    background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)' }
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      p: isMobile ? "12px !important" : 2
+                    }}>
+                      <EqualizerIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
+                      <Box>
+                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
+                          {profileData.statistics?.averageMetrics ?? "N/A"}
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Average Metrics
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Card sx={{ 
+                    height: '100%',
+                    background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)' }
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      p: isMobile ? "12px !important" : 2
+                    }}>
                       {profileData.statistics?.mostUsedWeapon === "rifle" ? (
-                        <RifleIcon fontSize="large" />
+                        <RifleIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       ) : (
-                        <PistolIcon fontSize="large" />
+                        <PistolIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       )}
                       <Box>
-                        <Typography variant="h6" fontWeight="bold">
+                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
                           {profileData.statistics?.mostUsedWeapon === "rifle" ? "Rifle" : "Pistol"}
                         </Typography>
-                        <Typography>Weapon Type</Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Preferred Weapon
+                        </Typography>
                       </Box>
-                    </Paper>
-                  </Grid>
-                </Grid>
-                <Grid item>
-                  <Typography variant="h6" fontWeight="bold">AI Personal Advice</Typography>
-                  <Typography>{profileData.aiAdvice}</Typography>
+                    </CardContent>
+                  </Card>
                 </Grid>
               </Grid>
-            </Paper>
-          </Grid>
+
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  AI Personal Advice
+                </Typography>
+                <Card sx={{ 
+                  p: isMobile ? 1.5 : 2, 
+                  background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                }}>
+                  <Typography variant="body1">
+                    {profileData.aiAdvice}
+                  </Typography>
+                </Card>
+              </Box>
+            </CardContent>
+          </Card>
         </Box>
 
         <Modal 
@@ -391,11 +500,11 @@ const ProfilePage = () => {
               top: "50%",
               left: "50%",
               transform: `translate(-50%, -50%) scale(${isEditModalOpen ? 1 : 0.5})`,
-              width: "400px",
+              width: isMobile ? "90%" : "400px",
               bgcolor: "background.paper",
               borderRadius: "8px",
               boxShadow: 24,
-              p: 4,
+              p: isMobile ? 2 : 4,
               opacity: isEditModalOpen ? 1 : 0,
               transition: 'all 0.3s ease-in-out'
             }}
@@ -406,7 +515,7 @@ const ProfilePage = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
               <Avatar
                 src={avatarPreview || profileData.avatarUrl}
-                sx={{ width: 100, height: 100, mb: 2 }}
+                sx={{ width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, mb: 2 }}
               />
               <input
                 accept="image/*"
@@ -416,7 +525,7 @@ const ProfilePage = () => {
                 onChange={handleFileChange}
               />
               <label htmlFor="avatar-upload">
-                <Button variant="outlined" component="span">
+                <Button variant="outlined" component="span" size={isMobile ? "small" : "medium"}>
                   Change Photo
                 </Button>
               </label>
@@ -427,8 +536,14 @@ const ProfilePage = () => {
               value={newUsername}
               onChange={(e) => handleProfileChange("username", e.target.value)}
               sx={{ marginBottom: 2 }}
+              size={isMobile ? "small" : "medium"}
             />
-            <Button variant="contained" onClick={handleProfileSave} fullWidth>
+            <Button 
+              variant="contained" 
+              onClick={handleProfileSave} 
+              fullWidth
+              size={isMobile ? "small" : "medium"}
+            >
               Save
             </Button>
           </Box>
