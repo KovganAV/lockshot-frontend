@@ -7,6 +7,7 @@ import "chart.js/auto";
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SendIcon from '@mui/icons-material/Send';
+import HistoryIcon from '@mui/icons-material/History';
 
 const StatisticsPage = () => {
   const [mode] = useState(localStorage.getItem('themeMode') || 'light');
@@ -19,7 +20,7 @@ const StatisticsPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [accuracyData, setAccuracyData] = useState([]);
-  const [weaponTypeData, setWeaponTypeData] = useState([]);
+  const [totalShotsData, setTotalShotsData] = useState([]);
   const [distanceData, setDistanceData] = useState([]);
   const [metricsData, setMetricsData] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -38,6 +39,8 @@ const StatisticsPage = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false); 
+  const [allShots, setAllShots] = useState([]); 
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,7 +67,7 @@ const StatisticsPage = () => {
                 throw new Error("Missing auth token");
             }
 
-            const response = await axios.get("/api/allHits", {
+            const response = await axios.get('https://localhost:7044/api/Hits/allHits', {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -76,34 +79,19 @@ const StatisticsPage = () => {
             }));
             setAccuracyData(accuracyProcessed);
 
-            const weaponGroups = data.reduce((acc, item) => {
-                if (!acc[item.weaponType]) {
-                    acc[item.weaponType] = {sum: 0, count: 0};
-                }
-                acc[item.weaponType].sum += item.score;
-                acc[item.weaponType].count++;
-                return acc;
-            }, {});
-
-            const weaponProcessed = Object.entries(weaponGroups).map(([type, stats]) => ({
-                date: type,
-                value: Math.round(stats.sum / stats.count)
+            const totalShotsProcessed = data.map(item => ({
+                date: new Date(item.timestamp).toLocaleDateString(),
+                value: 1 
             }));
-            setWeaponTypeData(weaponProcessed);
-
-            const distanceGroups = data.reduce((acc, item) => {
-                const distance = `${item.distance}m`;
-                if (!acc[distance]) {
-                    acc[distance] = {sum: 0, count: 0};
-                }
-                acc[distance].sum += item.score;
-                acc[distance].count++;
+            const totalShotsGrouped = totalShotsProcessed.reduce((acc, item) => {
+                acc[item.date] = (acc[item.date] || 0) + item.value;
                 return acc;
             }, {});
+            setTotalShotsData(Object.entries(totalShotsGrouped).map(([date, value]) => ({ date, value })));
 
-            const distanceProcessed = Object.entries(distanceGroups).map(([dist, stats]) => ({
-                date: dist,
-                value: Math.round(stats.sum / stats.count)
+            const distanceProcessed = data.map(item => ({
+                date: new Date(item.timestamp).toLocaleDateString(),
+                value: item.distance
             }));
             setDistanceData(distanceProcessed);
 
@@ -112,6 +100,7 @@ const StatisticsPage = () => {
                 value: Math.round(item.metrics * 100)
             }));
             setMetricsData(metricsProcessed);
+            setAllShots(data);
 
         } catch (err) {
             console.error("Error loading shots data:", err);
@@ -127,7 +116,7 @@ const StatisticsPage = () => {
   const handleAddShot = async () => {
     if (newShot.date && newShot.score && newShot.weaponType && newShot.distance) {
       try {
-        const response = await axios.post("/api/Hits", {
+        const response = await axios.post("https://localhost:7044/api/Hits/Hits", {
           date: newShot.date,
           weaponType: newShot.weaponType,
           score: parseInt(newShot.score, 10),
@@ -151,15 +140,15 @@ const StatisticsPage = () => {
 
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: !isMobile,
+    maintainAspectRatio: isMobile ? false : true,
     plugins: { 
       legend: { display: false },
     },
     scales: {
       x: {
         ticks: {
-          maxRotation: 45,
-          minRotation: 45,
+          maxRotation: isMobile ? 30 : 30,
+          minRotation: isMobile ? 30 : 30,
           font: {
             size: isMobile ? 10 : 12
           }
@@ -213,6 +202,14 @@ const StatisticsPage = () => {
     } finally {
       setIsAiTyping(false);
     }
+  };
+
+  const handleOpenHistory = () => {
+    setHistoryDialogOpen(true);
+  };
+
+  const handleCloseHistory = () => {
+    setHistoryDialogOpen(false);
   };
 
   if (loading) {
@@ -281,7 +278,7 @@ const StatisticsPage = () => {
                   borderRadius: 2,
                 }}
               />
-              <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? "100%" : "200px" }}>
+              <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? "100%" : "100px" }}>
                 <InputLabel>Weapon Type</InputLabel>
                 <Select
                   value={newShot.weaponType}
@@ -346,14 +343,29 @@ const StatisticsPage = () => {
               >
                 Add Shot
               </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={handleOpenHistory}
+                fullWidth={isMobile}
+                startIcon={<HistoryIcon />} 
+                sx={{
+                  color: "text.primary",
+                  fontWeight: "bold",
+                  padding: "10px 20px",
+                  textTransform: "none",
+                }}
+              >
+                View History
+              </Button>
             </Box>
           </Box>
     
           <Box display="grid" gridTemplateColumns={isMobile ? "1fr" : "repeat(2, 1fr)"} gap={3}>
             {[
-              { title: "Scores Over Time", data: accuracyData },
-              { title: "Average Score by Weapon", data: weaponTypeData },
-              { title: "Average Score by Distance", data: distanceData },
+              { title: "Accuracy Over Time", data: accuracyData },
+              { title: "Total Shots Over Time", data: totalShotsData },
+              { title: "Distance Over Time", data: distanceData }, 
               { title: "Metrics Over Time (%)", data: metricsData }
             ].map((chart, index) => (
               <Paper
@@ -369,7 +381,7 @@ const StatisticsPage = () => {
                 <Typography variant="h6" gutterBottom color="text.primary" fontSize={isMobile ? '1rem' : '1.25rem'}>
                   {chart.title}
                 </Typography>
-                <Line data={generateChartData(chart.data, chart.title)} options={chartOptions} height={isMobile ? 200 : undefined} />
+                <Line data={generateChartData(chart.data, chart.title)} options={chartOptions} height={isMobile ? 200 : 180} />
               </Paper>
             ))}
           </Box>
@@ -410,6 +422,33 @@ const StatisticsPage = () => {
               {selectedChart && <Line data={selectedChart} options={chartOptions} />}
             </Box>
           </Modal>
+
+          <Dialog 
+            open={historyDialogOpen}
+            onClose={handleCloseHistory}
+            maxWidth="sm"
+            fullWidth
+            sx={{
+              '& .MuiDialog-paper': {
+                margin: isMobile ? '16px' : '32px',
+                width: isMobile ? 'calc(100% - 32px)' : undefined
+              }
+            }}
+          >
+            <DialogTitle sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}>Shooting History</DialogTitle>
+            <DialogContent>
+              <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {allShots.map((shot, index) => (
+                  <ListItem key={index}>
+                    <Typography>{`Date: ${new Date(shot.timestamp).toLocaleDateString()}, Weapon: ${shot.weaponType}, Score: ${shot.score}, Distance: ${shot.distance} ${shot.metrics}`}</Typography>
+                  </ListItem>
+                ))}
+              </List>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseHistory}>Close</Button>
+            </DialogActions>
+          </Dialog>
 
           {showScrollTop && (
             <Fab
@@ -519,7 +558,6 @@ const StatisticsPage = () => {
               <Button onClick={() => setAiDialogOpen(false)}>Close</Button>
             </DialogActions>
           </Dialog>
-
         </Container>
       </Box>
     </ThemeProvider>

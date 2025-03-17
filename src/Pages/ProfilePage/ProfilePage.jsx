@@ -352,7 +352,7 @@ const ProfilePage = () => {
                       <SpeedIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       <Box>
                         <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
-                          {profileData.statistics?.averageScore ? profileData.statistics.averageScore.toFixed(1) : "N/A"}
+                          {profileData.statistics?.averageScore !== undefined ? profileData.statistics.averageScore.toFixed(1) : "N/A"}
                         </Typography>
                         <Typography variant="subtitle2" color="text.secondary">
                           Average Score
@@ -378,7 +378,7 @@ const ProfilePage = () => {
                       <GpsFixedIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       <Box>
                         <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
-                          {profileData.statistics?.maxDistance ?? "N/A"}
+                          {profileData.statistics?.maxDistance !== undefined ? profileData.statistics.maxDistance.toFixed(1) : "N/A"}
                         </Typography>
                         <Typography variant="subtitle2" color="text.secondary">
                           Max Distance (m)
@@ -404,7 +404,7 @@ const ProfilePage = () => {
                       <TrackChangesIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       <Box>
                         <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
-                          {profileData.statistics?.totalShots ?? "N/A"}
+                          {profileData.statistics?.totalShots !== undefined ? profileData.statistics.totalShots : "N/A"}
                         </Typography>
                         <Typography variant="subtitle2" color="text.secondary">
                           Total Shots
@@ -430,7 +430,7 @@ const ProfilePage = () => {
                       <EqualizerIcon color="primary" sx={{ fontSize: isMobile ? 32 : 40 }} />
                       <Box>
                         <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
-                          {profileData.statistics?.averageMetrics ?? "N/A"}
+                          {profileData.statistics?.averageMetrics !== undefined ? profileData.statistics.averageMetrics.toFixed(1) : "N/A"}
                         </Typography>
                         <Typography variant="subtitle2" color="text.secondary">
                           Average Metrics
@@ -550,7 +550,7 @@ const ProfilePage = () => {
         </Modal>
       </Box>
     </ThemeProvider>
-  );
+    );
 }
 
 export default ProfilePage;
