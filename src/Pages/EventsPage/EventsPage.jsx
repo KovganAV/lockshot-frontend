@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Container, CircularProgress, Alert, Box, ThemeProvider, createTheme, Fab, Modal, TextField, Button, Typography, Grow, Zoom, Card, CardContent, Grid } from "@mui/material";
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import AddIcon from '@mui/icons-material/Add';
+import StarIcon from '@mui/icons-material/Star'; 
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
 
@@ -20,7 +21,10 @@ const EventsPage = () => {
     location: '',
     date: ''
   });
-  
+  const [favorites, setFavorites] = useState({}); 
+  const [page, setPage] = useState(1); 
+  const [eventsPerPage] = useState(10); 
+
   const [mode] = useState(localStorage.getItem('themeMode') || 'light');
   const theme = createTheme({
     palette: {
@@ -31,9 +35,19 @@ const EventsPage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/Event");
+        const response = await axios.get(`http://localhost:5000/api/Event?page=${page}&limit=${eventsPerPage}`);
         const sortedEvents = response.data.sort((a, b) => new Date(a.date) - new Date(b.date));
-        setEvents(sortedEvents);
+        
+        const savedFavorites = JSON.parse(localStorage.getItem('favorites')) || {};
+        
+        const markedEvents = sortedEvents.map(event => ({
+          ...event,
+          isFavorite: savedFavorites[event.id] || false 
+        }));
+
+        const favoriteEvents = markedEvents.filter(event => event.isFavorite);
+        const otherEvents = markedEvents.filter(event => !event.isFavorite);
+        setEvents([...favoriteEvents, ...otherEvents]);
       } catch (err) {
         console.error("Error loading events:", err);
         setError("Failed to load events. Please try again later.");
@@ -43,7 +57,7 @@ const EventsPage = () => {
     };
 
     fetchEvents();
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,14 +106,30 @@ const EventsPage = () => {
   const handleSubmit = async () => {
     try {
       await axios.post("http://localhost:5000/api/Event", newEvent);
-      const response = await axios.get("http://localhost:5000/api/Event");
-      const sortedEvents = response.data.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setEvents(sortedEvents);
+      setPage(1); 
       handleModalClose();
     } catch (err) {
       console.error("Error creating event:", err);
       setError("Failed to create event. Please try again later.");
     }
+  };
+
+  const toggleFavorite = (event) => {
+    const isFavorite = favorites[event.id];
+    const updatedFavorites = {
+      ...favorites,
+      [event.id]: !isFavorite 
+    };
+    
+    setFavorites(updatedFavorites);
+    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    
+    // Обновляем состояние событий, чтобы отразить изменения в избранном
+    setEvents(prevEvents => 
+      prevEvents.map(evt => 
+        evt.id === event.id ? { ...evt, isFavorite: !isFavorite } : evt
+      )
+    );
   };
 
   const truncateTitle = (title) => {
@@ -159,9 +189,14 @@ const EventsPage = () => {
                         }
                       }}>
                       <CardContent>
-                        <Typography variant="h6" gutterBottom color="primary">
-                          {truncateTitle(event.title)}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="h6" gutterBottom color="primary">
+                            {truncateTitle(event.title)}
+                          </Typography>
+                          <Button onClick={(e) => { e.stopPropagation(); toggleFavorite(event); }} sx={{ color: event.isFavorite ? 'blue' : 'gray' }}>
+                            <StarIcon sx={{ color: event.isFavorite ? 'blue' : 'gray', transition: 'color 0.3s' }} />
+                          </Button>
+                        </Box>
                         <Typography variant="body2" color="text.secondary">
                           📍 {event.location}
                         </Typography>
@@ -322,5 +357,4 @@ const EventsPage = () => {
     </ThemeProvider>
   );
 };
-
 export default EventsPage;

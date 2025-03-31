@@ -25,10 +25,10 @@ const HeaderAuthorized = () => {
   ];
 
   return (
-    <AppBar position="static" color="default" elevation={1} sx={{ width: '100%' }}>
-      <Toolbar sx={{ justifyContent: "space-between"}}>
-        <Link to="/profile">
-          <Typography variant="h6" fontWeight="bold" color="text.primary">
+    <AppBar position="static" color="primary" elevation={3} sx={{ width: '100%', backgroundColor: '#3f51b5' }}>
+      <Toolbar sx={{ justifyContent: "space-between", padding: '0 20px', height: '64px' }}>
+        <Link to="/profile" style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h6" fontWeight="bold" color="white">
             Lockshot
           </Typography>
         </Link>
@@ -40,6 +40,7 @@ const HeaderAuthorized = () => {
               color="inherit"
               aria-label="menu"
               onClick={handleMenu}
+              sx={{ height: '100%' }}
             >
               <MenuIcon />
             </IconButton>
@@ -61,13 +62,14 @@ const HeaderAuthorized = () => {
             </Menu>
           </>
         ) : (
-          <Box>
+          <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
             {menuItems.map((item) => (
               <Button 
                 key={item.path}
                 color="inherit" 
                 component={Link} 
                 to={item.path}
+                sx={{ margin: '0 10px', '&:hover': { backgroundColor: '#5c6bc0' }, height: '100%', display: 'flex', alignItems: 'center' }}
               >
                 {item.text}
               </Button>

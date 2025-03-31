@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Box, Container, Typography, Paper, Button, TextField, Modal, ThemeProvider, createTheme, Fab, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress, useMediaQuery, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Box, Container, Typography, Paper, Button, TextField, Modal, ThemeProvider, createTheme, Fab, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress, useMediaQuery, MenuItem, 
+  FormControl, InputLabel, Select  } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
@@ -26,11 +27,10 @@ const StatisticsPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChart, setSelectedChart] = useState(null);
   const [newShot, setNewShot] = useState({ 
-    date: "", 
     weaponType: "",
     score: "",
     distance: "",
-    metrics: "meters"
+    metrics: 1 
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,22 +114,24 @@ const StatisticsPage = () => {
   }, []);
 
   const handleAddShot = async () => {
-    if (newShot.date && newShot.score && newShot.weaponType && newShot.distance) {
+    if (newShot.score && newShot.weaponType && newShot.distance && newShot.metrics) {
       try {
-        const response = await axios.post("https://localhost:7044/api/Hits/Hits", {
-          date: newShot.date,
+        const token = localStorage.getItem("authToken");
+        const response = await axios.post("https://localhost:7044/api/Hits/hits", {
           weaponType: newShot.weaponType,
           score: parseInt(newShot.score, 10),
+          timestamp: new Date().toISOString(), 
           distance: parseInt(newShot.distance, 10),
           metrics: newShot.metrics
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
         });
         setAccuracyData((prev) => [...prev, response.data]); 
         setNewShot({ 
-          date: "", 
           weaponType: "",
           score: "",
           distance: "",
-          metrics: "meters"
+          metrics: 1 
         });
       } catch (err) {
         console.error("Error adding shot:", err);
@@ -140,7 +142,7 @@ const StatisticsPage = () => {
 
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: isMobile ? false : true,
+    maintainAspectRatio: true, // Keep aspect ratio for all devices
     plugins: { 
       legend: { display: false },
     },
@@ -290,10 +292,11 @@ const StatisticsPage = () => {
                 </Select>
               </FormControl>
               <TextField
-                label="Score"
+                label="Score (0-10)"
                 type="number"
                 value={newShot.score}
                 onChange={(e) => setNewShot({ ...newShot, score: e.target.value })}
+                inputProps={{ min: 0, max: 10 }} 
                 fullWidth={isMobile}
                 sx={{
                   minWidth: isMobile ? "100%" : "200px",
@@ -301,31 +304,35 @@ const StatisticsPage = () => {
                   borderRadius: 2,
                 }}
               />
-              <Box sx={{ display: 'flex', gap: 1, width: isMobile ? "100%" : "auto" }}>
-                <TextField
-                  label="Distance"
-                  type="number"
-                  value={newShot.distance}
-                  onChange={(e) => setNewShot({ ...newShot, distance: e.target.value })}
-                  fullWidth={isMobile}
-                  sx={{
-                    minWidth: isMobile ? "70%" : "150px",
-                    boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
-                    borderRadius: 2,
-                  }}
-                />
-                <FormControl sx={{ minWidth: isMobile ? "30%" : "100px" }}>
-                  <InputLabel>Units</InputLabel>
-                  <Select
-                    value={newShot.metrics}
-                    label="Units"
-                    onChange={(e) => setNewShot({ ...newShot, metrics: e.target.value })}
-                  >
-                    <MenuItem value="meters">m</MenuItem>
-                    <MenuItem value="yards">yd</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
+              <TextField
+                label="Distance"
+                type="number"
+                value={newShot.distance}
+                onChange={(e) => setNewShot({ ...newShot, distance: e.target.value })}
+                fullWidth={isMobile}
+                sx={{
+                  minWidth: isMobile ? "100%" : "200px",
+                  boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
+                  borderRadius: 2,
+                }}
+              />
+              <TextField
+                label="Metrics (1-10)"
+                type="text"
+                value={newShot.metrics}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "" || (parseInt(value) >= 1 && parseInt(value) <= 10)) {
+                    setNewShot({ ...newShot, metrics: value });
+                  }
+                }}
+                fullWidth={isMobile}
+                sx={{
+                  minWidth: isMobile ? "100%" : "200px",
+                  boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.1)",
+                  borderRadius: 2,
+                }}
+              />
               <Button
                 variant="contained"
                 size="large"
@@ -440,7 +447,7 @@ const StatisticsPage = () => {
               <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {allShots.map((shot, index) => (
                   <ListItem key={index}>
-                    <Typography>{`Date: ${new Date(shot.timestamp).toLocaleDateString()}, Weapon: ${shot.weaponType}, Score: ${shot.score}, Distance: ${shot.distance} ${shot.metrics}`}</Typography>
+                    <Typography>{`Date: ${new Date(shot.timestamp).toLocaleDateString()}, Weapon: ${shot.weaponType}, Score: ${shot.score}, Distance: ${shot.distance}`}</Typography>
                   </ListItem>
                 ))}
               </List>

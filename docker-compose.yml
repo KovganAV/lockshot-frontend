@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: lockshot_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+
+  lockshot-user-api:
+    build:
+      context: ./Lockshot.User.API
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=localhost;Database=Lokcshot.UserDb;Username=postgres;Password=postgres; Port=5433;"
+      Redis__Host: redis
+    ports:
+      - "5001:80"
+
+  lockshot-channels-api:
+    build:
+      context: ./Lockshot.Channels.API
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=localhost;Database=Lokcshot.ContentDb;Username=postgres;Password=postgres; Port=5433"
+      Redis__Host: redis
+    ports:
+      - "5002:80"
+
+  lockshot-bot-api:
+    build:
+      context: ./Lockshot.Bot.API
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=localhost;Database=Lokcshot.ContentDb;Username=postgres;Password=postgres; Port=5433"
+      Redis__Host: redis
+    ports:
+      - "5003:80"
+
+  lockshot-frontend:
+    build:
+      context: ./lockshot-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - lockshot-user-api
+      - lockshot-channels-api
+      - lockshot-bot-api
+
+volumes:
+  pgdata:

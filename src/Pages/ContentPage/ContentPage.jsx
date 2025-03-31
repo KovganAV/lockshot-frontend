@@ -90,10 +90,8 @@ const ContentPage = () => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const [articlesRes, videosRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/content/articles"),
-          axios.get("http://localhost:5000/api/content/videos"),
-        ]);
+        const articlesRes = await axios.get("http://localhost:5000/api/content/articles?limit=10");
+        const videosRes = await axios.get("http://localhost:5000/api/content/videos?limit=10");
         setArticles([...articlesRes.data].sort((a, b) => b.id - a.id));
         setVideos([...videosRes.data].sort((a, b) => b.id - a.id));
       } catch (error) {
@@ -172,7 +170,7 @@ const ContentPage = () => {
           description: newContent.description,
           content: newContent.content
         });
-        const response = await axios.get("http://localhost:5000/api/content/articles");
+        const response = await axios.get("http://localhost:5000/api/content/articles?limit=10");
         setArticles([...response.data].sort((a, b) => b.id - a.id));
       } else {
         const videoId = extractVideoId(newContent.videoUrl);
@@ -185,7 +183,7 @@ const ContentPage = () => {
           videoUrl: newContent.videoUrl,
           videoId: videoId
         });
-        const response = await axios.get("http://localhost:5000/api/content/videos");
+        const response = await axios.get("http://localhost:5000/api/content/videos?limit=10");
         setVideos([...response.data].sort((a, b) => b.id - a.id));
       }
       handleModalClose();

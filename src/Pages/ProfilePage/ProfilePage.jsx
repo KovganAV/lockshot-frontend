@@ -56,6 +56,7 @@ const ProfilePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [aiAdvice, setAiAdvice] = useState('There is no personalised advice at the moment.'); 
 
   const toggleColorMode = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
@@ -65,17 +66,29 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = isMobile ? 'auto' : 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, [isMobile]);
 
   const fetchProfileData = async () => {
     const token = localStorage.getItem("authToken");
     
     if (!token) {
       setError("Authorization token is missing");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if profile data is already in local storage
+    const cachedProfileData = localStorage.getItem('profileData');
+    const cachedAiAdvice = localStorage.getItem('aiAdvice');
+
+    if (cachedProfileData) {
+      setProfileData(JSON.parse(cachedProfileData));
+      setNewUsername(JSON.parse(cachedProfileData).username);
+      setAiAdvice(cachedAiAdvice || 'There is no personalised advice at the moment.');
       setIsLoading(false);
       return;
     }
@@ -90,11 +103,25 @@ const ProfilePage = () => {
         })
       ]);
 
-      setProfileData({
+      const profileData = {
         ...profileResponse.data,
         statistics: statsResponse.data
-      });
+      };
+
+      setProfileData(profileData);
       setNewUsername(profileResponse.data.username);
+      localStorage.setItem('profileData', JSON.stringify(profileData)); // Save to local storage
+
+      try {
+        const aiResponse = await axios.post("http://localhost:5028/generate", statsResponse.data);
+        const advice = aiResponse.data || 'There is no personalised advice at the moment.';
+        setAiAdvice(advice);
+        localStorage.setItem('aiAdvice', advice); // Save AI advice to local storage
+      } catch (err) {
+        console.error("Failed to fetch AI advice:", err);
+        setAiAdvice('There is no personalised advice at the moment.'); 
+      }
+
     } catch (err) {
       console.error("Failed to load profile data:", err);
       setError("Failed to load profile data");
@@ -119,6 +146,8 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("profileData");
+    localStorage.removeItem("aiAdvice");
     handleMenuClose();
     navigate("/");
   };
@@ -182,11 +211,13 @@ const ProfilePage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setProfileData(prev => ({
-        ...prev,
+      const updatedProfileData = {
+        ...profileData,
         username: newUsername
-      }));
-      
+      };
+
+      setProfileData(updatedProfileData);
+      localStorage.setItem('profileData', JSON.stringify(updatedProfileData)); // Update local storage
       handleEditModalClose();
       await fetchProfileData();
     } catch (err) {
@@ -230,7 +261,7 @@ const ProfilePage = () => {
         width: "100%",
         bgcolor: 'background.default',
         color: 'text.primary',
-        overflow: 'auto'
+        overflow: isMobile ? 'auto' : 'hidden' // Allow scroll on mobile, disable on desktop
       }}>
         <AuthHeader />
         <Box sx={{ 
@@ -480,7 +511,7 @@ const ProfilePage = () => {
                   background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
                 }}>
                   <Typography variant="body1">
-                    {profileData.aiAdvice}
+                    {aiAdvice} 
                   </Typography>
                 </Card>
               </Box>
