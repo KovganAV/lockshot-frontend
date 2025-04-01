@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Container, CircularProgress, Alert, Box, ThemeProvider, createTheme, Fab, Modal, TextField, Button, Typography, Grow, Zoom, Card, CardContent, Grid } from "@mui/material";
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import AddIcon from '@mui/icons-material/Add';
 import StarIcon from '@mui/icons-material/Star'; 
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import axios from "axios";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'; 
+import "leaflet/dist/leaflet.css";
 
 const EventsPage = () => {
   const [events, setEvents] = useState([]);
@@ -19,7 +21,9 @@ const EventsPage = () => {
     title: '',
     description: '',
     location: '',
-    date: ''
+    date: '',
+    latitude: null,
+    longitude: null
   });
   const [favorites, setFavorites] = useState({}); 
   const [page, setPage] = useState(1); 
@@ -31,6 +35,8 @@ const EventsPage = () => {
       mode: mode,
     },
   });
+
+  const mapRef = useRef(); 
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -57,7 +63,7 @@ const EventsPage = () => {
     };
 
     fetchEvents();
-  }, [page]);
+  }, [page, eventsPerPage]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -78,7 +84,7 @@ const EventsPage = () => {
   const handleModalOpen = () => setOpenModal(true);
   const handleModalClose = () => {
     setOpenModal(false);
-    setNewEvent({ title: '', description: '', location: '', date: '' });
+    setNewEvent({ title: '', description: '', location: '', date: '', latitude: null, longitude: null });
   };
 
   const handleEventClick = (event) => {
@@ -96,6 +102,15 @@ const EventsPage = () => {
     setNewEvent(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleMapClick = (event) => {
+    const { lat, lng } = event.latlng;
+    setNewEvent(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng
     }));
   };
 
@@ -124,7 +139,6 @@ const EventsPage = () => {
     setFavorites(updatedFavorites);
     localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
     
-    // Обновляем состояние событий, чтобы отразить изменения в избранном
     setEvents(prevEvents => 
       prevEvents.map(evt => 
         evt.id === event.id ? { ...evt, isFavorite: !isFavorite } : evt
@@ -150,6 +164,14 @@ const EventsPage = () => {
     
     return titleMatch || locationMatch || dateMatch;
   });
+
+  useEffect(() => {
+    if (showEventDetails && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 300); 
+    }
+  }, [showEventDetails]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -261,7 +283,7 @@ const EventsPage = () => {
               boxShadow: 24,
               p: 4,
               borderRadius: 2,
-              width: 400
+              width: 500 
             }}>
               <Typography variant="h6" component="h2" gutterBottom>
                 Create New Event ✨
@@ -304,6 +326,28 @@ const EventsPage = () => {
                   shrink: true,
                 }}
               />
+              <Box sx={{ mt: 2, mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Укажите место на карте:
+                </Typography>
+                <MapContainer
+                  center={[51.505, -0.09]} 
+                  zoom={7}
+                  scrollWheelZoom={true}
+                  style={{ height: "300px", width: "100%" }}
+                  onClick={handleMapClick}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  {newEvent.latitude && newEvent.longitude && (
+                    <Marker position={[newEvent.latitude, newEvent.longitude]}>
+                      <Popup>{newEvent.title}</Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+              </Box>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                 <Button onClick={handleModalClose}>Cancel</Button>
                 <Button variant="contained" onClick={handleSubmit}>Create 🎉</Button>
@@ -327,7 +371,7 @@ const EventsPage = () => {
               boxShadow: 24,
               p: 4,
               borderRadius: 2,
-              width: 400,
+              width: 600,
               maxHeight: '80vh',
               overflow: 'auto'
             }}>
@@ -345,6 +389,44 @@ const EventsPage = () => {
                   <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                     🗓️ Date: {new Date(selectedEvent.date).toLocaleString()}
                   </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Карта события:
+                    </Typography>
+                    <Box
+                      sx={{
+                        height: '300px',
+                        width: '100%',
+                        position: 'relative', 
+                        overflow: 'hidden', 
+                        borderRadius: '8px', 
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)', 
+                      }}
+                    >
+                      <MapContainer
+                        ref={mapRef} 
+                        center={[selectedEvent.latitude || 51.505, selectedEvent.longitude || -0.09]}
+                        zoom={7} 
+                        scrollWheelZoom={true}  
+                        style={{ height: "100%", width: "100%" }} 
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
+                        {selectedEvent.latitude && selectedEvent.longitude && (
+                          <Marker position={[selectedEvent.latitude, selectedEvent.longitude]}>
+                            <Popup>{selectedEvent.title}</Popup>
+                          </Marker>
+                        )}
+                      </MapContainer> 
+                      {isLoading && (
+                        <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+                          <CircularProgress />
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button onClick={handleEventDetailsClose}>Close</Button>
                   </Box>

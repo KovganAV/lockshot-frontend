@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Container, Typography, Paper, Button, TextField, Modal, ThemeProvider, createTheme, Fab, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress, useMediaQuery, MenuItem, 
+import { Box, Container, Typography, Paper, Button, IconButton, TextField, Modal, ThemeProvider, createTheme, Fab, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress, useMediaQuery, MenuItem, 
   FormControl, InputLabel, Select  } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
@@ -9,6 +9,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SendIcon from '@mui/icons-material/Send';
 import HistoryIcon from '@mui/icons-material/History';
+import DeleteIcon from '@mui/icons-material/Delete'; 
 
 const StatisticsPage = () => {
   const [mode] = useState(localStorage.getItem('themeMode') || 'light');
@@ -75,7 +76,8 @@ const StatisticsPage = () => {
             
             const accuracyProcessed = data.map(item => ({
                 date: new Date(item.timestamp).toLocaleDateString(),
-                value: item.score
+                value: item.score,
+                id: item.id
             }));
             setAccuracyData(accuracyProcessed);
 
@@ -140,9 +142,23 @@ const StatisticsPage = () => {
     }
   };
 
+  const handleDeleteShot = async (id) => {
+    const token = localStorage.getItem("authToken");
+    try {
+      await axios.delete(`https://localhost:7044/api/Hits/hits/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAllShots((prev) => prev.filter(shot => shot.id !== id));
+      alert("Shot deleted successfully.");
+    } catch (err) {
+      console.error("Error deleting shot:", err);
+      alert("Failed to delete shot. Please try again later.");
+    }
+  };
+
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: true, // Keep aspect ratio for all devices
+    maintainAspectRatio: true, 
     plugins: { 
       legend: { display: false },
     },
@@ -446,7 +462,11 @@ const StatisticsPage = () => {
             <DialogContent>
               <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {allShots.map((shot, index) => (
-                  <ListItem key={index}>
+                  <ListItem key={index} secondaryAction={
+                    <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteShot(shot.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  }>
                     <Typography>{`Date: ${new Date(shot.timestamp).toLocaleDateString()}, Weapon: ${shot.weaponType}, Score: ${shot.score}, Distance: ${shot.distance}`}</Typography>
                   </ListItem>
                 ))}
